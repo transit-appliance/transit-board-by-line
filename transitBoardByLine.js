@@ -78,6 +78,7 @@ transitBoardByLine.service_messages = [];
 transitBoardByLine.minutes_limit = 0;
 transitBoardByLine.arrivals_limit = 0;
 transitBoardByLine.rotation_complete = true;
+transitBoardByLine.banks = ['bank1','bank2'];
 
 transitBoardByLine.animation_factor = 0.85; // arbitrary value to allow for pause time plus javascript processing time, will be dynamically adjusted
 transitBoardByLine.messages = [];
@@ -199,6 +200,7 @@ transitBoardByLine.initializePage = function(data) {
 	
 	if (data.optionsConfig.suppress_scrolling != undefined && data.optionsConfig.suppress_scrolling[0] != undefined && data.optionsConfig.suppress_scrolling[0] != "") {
 		transitBoardByLine.suppress_scrolling = true;
+		transitBoardByLine.banks = ['bank1'];
 	}
 	
 	if (data.optionsConfig.suppress_downtown_only != undefined && data.optionsConfig.suppress_downtown_only[0] != undefined && data.optionsConfig.suppress_downtown_only[0] != "") {
@@ -469,7 +471,7 @@ transitBoardByLine.animate_display = function() {
 	
 	var animation_start = new Date();
 	if (rows > transitBoardByLine.rows_per_screen && !transitBoardByLine.suppress_scrolling) {
-		transitBoardByLine.isotope_container.isotope({ filter: '.active' }).isotope();
+		transitBoardByLine.isotope_container.isotope({ filter: '.active' }).isotope( 'reLayout' ).isotope();
 		if (transitBoardByLine.rotation_complete) {
 			transitBoardByLine.rotation_complete = false;
 			//jQuery(".trip_wrapper").width(transitBoardByLine.target_width);
@@ -487,7 +489,7 @@ transitBoardByLine.animate_display = function() {
 			}
 		}
 	} else {
-		transitBoardByLine.isotope_container.isotope({ filter: '.bank1.active' }).isotope();
+		transitBoardByLine.isotope_container.isotope({ filter: '.bank1.active' }).isotope( 'reLayout' ).isotope();
 		// need to rotate message
 		var message_interval = transitBoardByLine.displayInterval/4;
 		// 3 times
@@ -684,10 +686,15 @@ transitBoardByLine.displayPage = function(data, callback) {
 		// reduce font size until there is no more overflow
 		var trip = jQuery("."+trip_id+" td.destination div");
 		if (trip.length > 0) {
-			if (trip[0].scrollHeight > trip[0].clientHeight) {
+			if (trip[0].scrollHeight - trip[0].clientHeight > 2) {
 				var size = parseInt(jQuery(trip[0]).css('font-size'))-1;
-				trip.css('font-size',size+"px");
-				setTimeout(function(){transitBoardByLine.shrink_destination(trip_id)}, 1000);
+				if (trip_id.match(/car2go/)) {
+					// make sure all car2go elements are same font size
+					jQuery(".car2go td.destination div").css('font-size',size+"px");
+				} else {
+					trip.css('font-size',size+"px");
+				}
+				setTimeout(function(){transitBoardByLine.shrink_destination(trip_id)}, 2000);
 			}
 		}
 	}
@@ -696,17 +703,18 @@ transitBoardByLine.displayPage = function(data, callback) {
 	function process_insertions() {
 		if (insertion_queue.length > 0) {
 			var obj = insertion_queue.shift();
-			jQuery.each(['bank1','bank2'],function(index,bank) {
+			jQuery.each(transitBoardByLine.banks,function(index,bank) {
 				var obj_string = obj.replace(/bank_placeholder/g,bank);
 				transitBoardByLine.isotope_container.isotope( 'insert', jQuery(obj_string) );
 			});
 			//get trip_id from obj and set up call to test overflow
 			var matches = obj.match(/tripid="([^"]*)"/);
 			if (matches.length > 1) {
-				setTimeout(function(){transitBoardByLine.shrink_destination(matches[1])}, 1000);
+				setTimeout(function(){transitBoardByLine.shrink_destination(matches[1])}, 2000);
 			}
 			process_insertions();
 		} else {
+			transitBoardByLine.isotope_container.isotope( 'reLayout' ).isotope();
 			transitBoardByLine.animate_display();
 		}
 	}
@@ -727,7 +735,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 		var id = jQuery(element).attr("data-tripid");
 		if ( trip_objects[id] == null && !id.match(/car2go/) ) {
 			jQuery("table."+id).removeClass('active');
-			//removal_queue.push(id);
+			removal_queue.push(id);
 		}
 	});
 	
@@ -764,7 +772,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 				}
 				if (jQuery(".car2go"+i).length == 0) {
 					var car = '\
-							<table class="car2go'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="90000" data-bank="bank_placeholder" data-tripid="car2go'+i+'">\
+							<table class="car2go car2go'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="90000" data-bank="bank_placeholder" data-tripid="car2go'+i+'">\
 								<tbody class="trip service_color_car2go">\
 									<tr valign="middle">\
 										<td class="route"><img src="../assets/images/car2go/car2go_vehicle.jpg"></td>\
@@ -774,7 +782,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 								</tbody>\
 							</table>\
 					';
-					jQuery.each(['bank1','bank2'],function(index,bank) {
+					jQuery.each(transitBoardByLine.banks,function(index,bank) {
 						var car_string = car.replace(/bank_placeholder/g,bank);
 						transitBoardByLine.isotope_container.isotope( 'insert', jQuery(car_string) );
 					});
@@ -785,7 +793,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 					if (trip.length > 0) {
 						if (trip[0].scrollHeight > trip[0].clientHeight) {
 							var car2go_class = 'car2go'+i;
-							setTimeout(function(){transitBoardByLine.shrink_destination(car2go_class)}, 1000);
+							setTimeout(function(){transitBoardByLine.shrink_destination(car2go_class)}, 2000);
 						}
 					}
 					jQuery('.car2go'+i+' .arrivals').html(dist.toFixed(1)+' mi');
