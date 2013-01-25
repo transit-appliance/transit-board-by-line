@@ -1,5 +1,5 @@
 /*
-   Copyright 2010-2012 Portland Transport
+   Copyright 2010-2013 Portland Transport
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,13 +19,14 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.00";
+transitBoardByLine.APP_VERSION 	= "2.10";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
 
 transitBoardByLine.is_development = (document.domain == "dev.transitboard.com");
 transitBoardByLine.isChumby = navigator.userAgent.match(/QtEmb/) != null;
+
 
 
 
@@ -44,6 +45,8 @@ transitBoardByLine.dependencies = [
 		"../assets/js/trCar2Go.js"
 ];
 
+
+
 if (!transitBoardByLine.is_development) {
 	transitBoardByLine.dependencies.push("../assets/js/tracekit.js");
 }
@@ -59,7 +62,7 @@ if (!transitBoardByLine.is_development) {
 	}
 	
 	// load stylesheet
-	$('head').append('<link rel="stylesheet" type="text/css" href="transitBoardByLine.css">');
+	$('head').append('<link rel="stylesheet" type="text/css" href="transitBoardByLine.css?timestamp'+timestamp+'">');
 	if (!transitBoardByLine.isChumby) {
 		// load fonts
 		$('head').append('<link rel="stylesheet" type="text/css" href="../assets/fonts/DejuVu/stylesheet.css?timestamp='+timestamp+'">');
@@ -68,6 +71,10 @@ if (!transitBoardByLine.is_development) {
 }());
 
 head.js.apply(undefined,transitBoardByLine.dependencies);
+
+head.ready(function() {
+   transitBoardByLine.start_time_formatted = new Date().toString("MM/dd hh:mmt");
+});
 
 transitBoardByLine.paging_state = {}; // paging state
 transitBoardByLine.paging_state.next_row = undefined;
@@ -78,6 +85,7 @@ transitBoardByLine.service_messages = [];
 transitBoardByLine.minutes_limit = 0;
 transitBoardByLine.arrivals_limit = 0;
 transitBoardByLine.rotation_complete = true;
+transitBoardByLine.banks = ['bank1','bank2'];
 
 transitBoardByLine.animation_factor = 0.85; // arbitrary value to allow for pause time plus javascript processing time, will be dynamically adjusted
 transitBoardByLine.messages = [];
@@ -130,8 +138,12 @@ transitBoardByLine.resetMessageQueue = function() {
 	for (var i = 0; i < transitBoardByLine.service_messages.length; i++) {
 		transitBoardByLine.messages.push('<span style="font-weight: bold; color: red">'+transitBoardByLine.service_messages[i]+'</span>');
 	}
-	var dimensions = jQuery(window).width()+"x"+jQuery(window).height()
-  transitBoardByLine.messages.push("<span style=\"font-size: 60%\">["+transitBoardByLine.appliance_id+" "+dimensions+" "+transitBoardByLine.animation_factor+"]</span>");
+	var dimensions = jQuery("body").innerWidth()+"x"+jQuery("body").innerHeight();
+	var is_dev = "";
+	if (transitBoardByLine.is_development) {
+		is_dev = "D ";
+	}
+  transitBoardByLine.messages.push("<span style=\"font-size: 60%\">["+is_dev+transitBoardByLine.start_time_formatted+" "+transitBoardByLine.appliance_id+" "+dimensions+" "+transitBoardByLine.animation_factor+"]</span>");
 }
 
 transitBoardByLine.advanceMessage = function() {
@@ -149,10 +161,25 @@ transitBoardByLine.advanceMessage = function() {
 
 transitBoardByLine.initializePage = function(data) {	
 	
-	// check for Chumby screen resolutions and mark a class in the body tag
-	if ( transitBoardByLine.isChumby ) {
-		//jQuery("body").addClass("chumby");
-	}
+	// initialize screen margins
+	
+	var body_width 		= data.optionsConfig.width || jQuery(window).width();
+	var body_height 	= data.optionsConfig.height || jQuery(window).height();	
+
+	var left_border 	= data.optionsConfig.left || 0;
+	var bottom_border = data.optionsConfig.bottom || 0;
+	var top_border 		= data.optionsConfig.top || 0;
+	var right_border 	= data.optionsConfig.right || 0;
+	
+	jQuery("body").css("width",body_width-left_border-right_border).css("height",body_height-bottom_border-top_border);
+
+	jQuery("body").css('border-left-width',left_border);
+	jQuery("body").css('border-top-width',top_border);
+	jQuery("body").css('border-right-width',right_border);
+	jQuery("body").css('border-bottom-width',bottom_border);
+	jQuery("body").css('position','relative'); // for reasons I haven't figured out, this has to be set late
+	
+	// initialize car2go object if needed
 	
 	if (data.optionsConfig != undefined && data.optionsConfig.lat != undefined && data.optionsConfig.lat[0] != undefined) {
 		if (data.optionsConfig.lng != undefined && data.optionsConfig.lng[0] != undefined) {
@@ -197,11 +224,12 @@ transitBoardByLine.initializePage = function(data) {
 		transitBoardByLine.banner = "";
 	}
 	
-	if (data.optionsConfig.suppress_scrolling != undefined && data.optionsConfig.suppress_scrolling[0] != undefined && data.optionsConfig.suppress_scrolling[0] != "") {
+	if (data.optionsConfig.suppress_scrolling != undefined && data.optionsConfig.suppress_scrolling[0] != undefined && data.optionsConfig.suppress_scrolling[0] != "" && data.optionsConfig.suppress_scrolling[0] != 0) {
 		transitBoardByLine.suppress_scrolling = true;
+		transitBoardByLine.banks = ['bank1'];
 	}
 	
-	if (data.optionsConfig.suppress_downtown_only != undefined && data.optionsConfig.suppress_downtown_only[0] != undefined && data.optionsConfig.suppress_downtown_only[0] != "") {
+	if (data.optionsConfig.suppress_downtown_only != undefined && data.optionsConfig.suppress_downtown_only[0] != undefined && data.optionsConfig.suppress_downtown_only[0] != "" && data.optionsConfig.suppress_downtown_only[0] != 0) {
 		transitBoardByLine.suppress_downtown_only = true;
 	}
 	
@@ -255,15 +283,14 @@ transitBoardByLine.initializePage = function(data) {
 	}
 	
 	// set sizes
-	var window_height = jQuery(window).height();
+	var window_height = jQuery("body").innerHeight();
 	var basic_text = Math.floor(font_scale_factor*window_height/30) + "px";
 	var large_text = Math.floor(font_scale_factor*window_height/20) + "px";
 	var padding    = Math.floor(font_scale_factor*window_height/100) + "px";
 	var scroller_height = (Math.floor(font_scale_factor*window_height/30)+Math.floor(font_scale_factor*window_height/100)) + "px";
 	
 	// bigger fonts for wider displays
-	if (jQuery(window).width()/jQuery(window).height() > 1.4) {
-		window_height = jQuery(window).height();
+	if (jQuery("body").innerWidth()/window_height > 1.4) {
 		basic_text = Math.floor(font_scale_factor*window_height/22) + "px";
 		large_text = Math.floor(font_scale_factor*window_height/14) + "px";
 		padding    = Math.floor(font_scale_factor*window_height/100) + "px";
@@ -359,12 +386,7 @@ transitBoardByLine.initializePage = function(data) {
 			table.trip_wrapper { font-size: '+base_em_size+'px; }\
 		</style>\
 	'));	
-	
- 	
-	var bottom_height = jQuery(window).height() - jQuery("#tb_bottom").offset().top;
-
-	jQuery("body").css("padding-bottom",bottom_height+"px");
-	
+		
 	// minimize width of route and arrival elements
 	var route_cell_width = jQuery("#trip1 td.route").width();
 	var route_text_width = jQuery("#trip1 td.route span").width();
@@ -469,7 +491,7 @@ transitBoardByLine.animate_display = function() {
 	
 	var animation_start = new Date();
 	if (rows > transitBoardByLine.rows_per_screen && !transitBoardByLine.suppress_scrolling) {
-		transitBoardByLine.isotope_container.isotope({ filter: '.active' }).isotope();
+		transitBoardByLine.isotope_container.isotope({ filter: '.active' }).isotope( 'reLayout' ).isotope();
 		if (transitBoardByLine.rotation_complete) {
 			transitBoardByLine.rotation_complete = false;
 			//jQuery(".trip_wrapper").width(transitBoardByLine.target_width);
@@ -487,7 +509,7 @@ transitBoardByLine.animate_display = function() {
 			}
 		}
 	} else {
-		transitBoardByLine.isotope_container.isotope({ filter: '.bank1.active' }).isotope();
+		transitBoardByLine.isotope_container.isotope({ filter: '.bank1.active' }).isotope( 'reLayout' ).isotope();
 		// need to rotate message
 		var message_interval = transitBoardByLine.displayInterval/4;
 		// 3 times
@@ -637,7 +659,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 		}
 		
 		var trip_inner = '<tr valign="middle"><td class="route">'+by_trip[trip_key].arrivals[0].app_route_id+"</td>\n";
-		trip_inner += '<td class="destination" valign="middle"><div>'+by_trip[trip_key].arrivals[0].app_headsign_less_route+" from "+by_trip[trip_key].arrivals[0].stop_data.stop_name+"</div></td>\n";
+		trip_inner += '<td class="destination" valign="middle"><div>'+by_trip[trip_key].arrivals[0].app_headsign_less_route+" from "+by_trip[trip_key].arrivals[0].stop_data.stop_name.replace(" MAX Station","").replace(" MAX Stn","")+"</div></td>\n";
 		trip_inner += "<td class=\"arrivals\">"+trip_arrival+"</td></tr>";
 		
 
@@ -684,10 +706,15 @@ transitBoardByLine.displayPage = function(data, callback) {
 		// reduce font size until there is no more overflow
 		var trip = jQuery("."+trip_id+" td.destination div");
 		if (trip.length > 0) {
-			if (trip[0].scrollHeight > trip[0].clientHeight) {
+			if (trip[0].scrollHeight - trip[0].clientHeight > 2) {
 				var size = parseInt(jQuery(trip[0]).css('font-size'))-1;
-				trip.css('font-size',size+"px");
-				setTimeout(function(){transitBoardByLine.shrink_destination(trip_id)}, 1000);
+				if (trip_id.match(/car2go/)) {
+					// make sure all car2go elements are same font size
+					jQuery(".car2go td.destination div").css('font-size',size+"px");
+				} else {
+					trip.css('font-size',size+"px");
+				}
+				setTimeout(function(){transitBoardByLine.shrink_destination(trip_id)}, 2000);
 			}
 		}
 	}
@@ -696,17 +723,18 @@ transitBoardByLine.displayPage = function(data, callback) {
 	function process_insertions() {
 		if (insertion_queue.length > 0) {
 			var obj = insertion_queue.shift();
-			jQuery.each(['bank1','bank2'],function(index,bank) {
+			jQuery.each(transitBoardByLine.banks,function(index,bank) {
 				var obj_string = obj.replace(/bank_placeholder/g,bank);
 				transitBoardByLine.isotope_container.isotope( 'insert', jQuery(obj_string) );
 			});
 			//get trip_id from obj and set up call to test overflow
 			var matches = obj.match(/tripid="([^"]*)"/);
 			if (matches.length > 1) {
-				setTimeout(function(){transitBoardByLine.shrink_destination(matches[1])}, 1000);
+				setTimeout(function(){transitBoardByLine.shrink_destination(matches[1])}, 2000);
 			}
 			process_insertions();
 		} else {
+			transitBoardByLine.isotope_container.isotope( 'reLayout' ).isotope();
 			transitBoardByLine.animate_display();
 		}
 	}
@@ -727,7 +755,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 		var id = jQuery(element).attr("data-tripid");
 		if ( trip_objects[id] == null && !id.match(/car2go/) ) {
 			jQuery("table."+id).removeClass('active');
-			//removal_queue.push(id);
+			removal_queue.push(id);
 		}
 	});
 	
@@ -764,7 +792,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 				}
 				if (jQuery(".car2go"+i).length == 0) {
 					var car = '\
-							<table class="car2go'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="90000" data-bank="bank_placeholder" data-tripid="car2go'+i+'">\
+							<table class="car2go car2go'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="90000" data-bank="bank_placeholder" data-tripid="car2go'+i+'">\
 								<tbody class="trip service_color_car2go">\
 									<tr valign="middle">\
 										<td class="route"><img src="../assets/images/car2go/car2go_vehicle.jpg"></td>\
@@ -774,7 +802,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 								</tbody>\
 							</table>\
 					';
-					jQuery.each(['bank1','bank2'],function(index,bank) {
+					jQuery.each(transitBoardByLine.banks,function(index,bank) {
 						var car_string = car.replace(/bank_placeholder/g,bank);
 						transitBoardByLine.isotope_container.isotope( 'insert', jQuery(car_string) );
 					});
@@ -784,7 +812,8 @@ transitBoardByLine.displayPage = function(data, callback) {
 					var trip = jQuery('.car2go'+i+' .destination div');
 					if (trip.length > 0) {
 						if (trip[0].scrollHeight > trip[0].clientHeight) {
-							setTimeout("transitBoardByLine.shrink_destination('car2go"+i+"')", 1000);
+							var car2go_class = 'car2go'+i;
+							setTimeout(function(){transitBoardByLine.shrink_destination(car2go_class)}, 2000);
 						}
 					}
 					jQuery('.car2go'+i+' .arrivals').html(dist.toFixed(1)+' mi');
@@ -875,6 +904,9 @@ head.ready(function() {
 			    url: 'http://transitappliance.com/cgi-bin/js_error.pl',
 			    type: 'POST',
 			    data: {
+					  	applicationName: 			transitBoardByLine.APP_NAME,
+					  	applicationVersion: 	transitBoardByLine.APP_VERSION,
+					  	applicationId: 				transitBoardByLine.APP_ID,
 			    		errorUUID: error_uuid,
 			        browserUrl: window.location.href,
 			        userAgent: navigator.userAgent,
@@ -883,7 +915,7 @@ head.ready(function() {
 			});
 		});
 	
-		//throw new Error("Test Event");
+		//throw new Error("Startup Event");
 	}
 	
   trArr({
