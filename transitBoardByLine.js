@@ -1,5 +1,5 @@
 /*
-   Copyright 2010-2012 Portland Transport
+   Copyright 2010-2013 Portland Transport
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,13 +19,14 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.00";
+transitBoardByLine.APP_VERSION 	= "2.10";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
 
 transitBoardByLine.is_development = (document.domain == "dev.transitboard.com");
 transitBoardByLine.isChumby = navigator.userAgent.match(/QtEmb/) != null;
+
 
 
 
@@ -44,6 +45,8 @@ transitBoardByLine.dependencies = [
 		"../assets/js/trCar2Go.js"
 ];
 
+
+
 if (!transitBoardByLine.is_development) {
 	transitBoardByLine.dependencies.push("../assets/js/tracekit.js");
 }
@@ -59,7 +62,7 @@ if (!transitBoardByLine.is_development) {
 	}
 	
 	// load stylesheet
-	$('head').append('<link rel="stylesheet" type="text/css" href="transitBoardByLine.css">');
+	$('head').append('<link rel="stylesheet" type="text/css" href="transitBoardByLine.css?timestamp'+timestamp+'">');
 	if (!transitBoardByLine.isChumby) {
 		// load fonts
 		$('head').append('<link rel="stylesheet" type="text/css" href="../assets/fonts/DejuVu/stylesheet.css?timestamp='+timestamp+'">');
@@ -68,6 +71,10 @@ if (!transitBoardByLine.is_development) {
 }());
 
 head.js.apply(undefined,transitBoardByLine.dependencies);
+
+head.ready(function() {
+   transitBoardByLine.start_time_formatted = new Date().toString("MM/dd hh:mmt");
+});
 
 transitBoardByLine.paging_state = {}; // paging state
 transitBoardByLine.paging_state.next_row = undefined;
@@ -131,8 +138,12 @@ transitBoardByLine.resetMessageQueue = function() {
 	for (var i = 0; i < transitBoardByLine.service_messages.length; i++) {
 		transitBoardByLine.messages.push('<span style="font-weight: bold; color: red">'+transitBoardByLine.service_messages[i]+'</span>');
 	}
-	var dimensions = jQuery(window).width()+"x"+jQuery(window).height()
-  transitBoardByLine.messages.push("<span style=\"font-size: 60%\">["+transitBoardByLine.appliance_id+" "+dimensions+" "+transitBoardByLine.animation_factor+"]</span>");
+	var dimensions = jQuery("body").innerWidth()+"x"+jQuery("body").innerHeight();
+	var is_dev = "";
+	if (transitBoardByLine.is_development) {
+		is_dev = "D ";
+	}
+  transitBoardByLine.messages.push("<span style=\"font-size: 60%\">["+is_dev+transitBoardByLine.start_time_formatted+" "+transitBoardByLine.appliance_id+" "+dimensions+" "+transitBoardByLine.animation_factor+"]</span>");
 }
 
 transitBoardByLine.advanceMessage = function() {
@@ -150,10 +161,25 @@ transitBoardByLine.advanceMessage = function() {
 
 transitBoardByLine.initializePage = function(data) {	
 	
-	// check for Chumby screen resolutions and mark a class in the body tag
-	if ( transitBoardByLine.isChumby ) {
-		//jQuery("body").addClass("chumby");
-	}
+	// initialize screen margins
+	
+	var body_width 		= data.optionsConfig.width || jQuery(window).width();
+	var body_height 	= data.optionsConfig.height || jQuery(window).height();	
+
+	var left_border 	= data.optionsConfig.left || 0;
+	var bottom_border = data.optionsConfig.bottom || 0;
+	var top_border 		= data.optionsConfig.top || 0;
+	var right_border 	= data.optionsConfig.right || 0;
+	
+	jQuery("body").css("width",body_width-left_border-right_border).css("height",body_height-bottom_border-top_border);
+
+	jQuery("body").css('border-left-width',left_border);
+	jQuery("body").css('border-top-width',top_border);
+	jQuery("body").css('border-right-width',right_border);
+	jQuery("body").css('border-bottom-width',bottom_border);
+	jQuery("body").css('position','relative'); // for reasons I haven't figured out, this has to be set late
+	
+	// initialize car2go object if needed
 	
 	if (data.optionsConfig != undefined && data.optionsConfig.lat != undefined && data.optionsConfig.lat[0] != undefined) {
 		if (data.optionsConfig.lng != undefined && data.optionsConfig.lng[0] != undefined) {
@@ -198,12 +224,12 @@ transitBoardByLine.initializePage = function(data) {
 		transitBoardByLine.banner = "";
 	}
 	
-	if (data.optionsConfig.suppress_scrolling != undefined && data.optionsConfig.suppress_scrolling[0] != undefined && data.optionsConfig.suppress_scrolling[0] != "") {
+	if (data.optionsConfig.suppress_scrolling != undefined && data.optionsConfig.suppress_scrolling[0] != undefined && data.optionsConfig.suppress_scrolling[0] != "" && data.optionsConfig.suppress_scrolling[0] != 0) {
 		transitBoardByLine.suppress_scrolling = true;
 		transitBoardByLine.banks = ['bank1'];
 	}
 	
-	if (data.optionsConfig.suppress_downtown_only != undefined && data.optionsConfig.suppress_downtown_only[0] != undefined && data.optionsConfig.suppress_downtown_only[0] != "") {
+	if (data.optionsConfig.suppress_downtown_only != undefined && data.optionsConfig.suppress_downtown_only[0] != undefined && data.optionsConfig.suppress_downtown_only[0] != "" && data.optionsConfig.suppress_downtown_only[0] != 0) {
 		transitBoardByLine.suppress_downtown_only = true;
 	}
 	
@@ -257,15 +283,14 @@ transitBoardByLine.initializePage = function(data) {
 	}
 	
 	// set sizes
-	var window_height = jQuery(window).height();
+	var window_height = jQuery("body").innerHeight();
 	var basic_text = Math.floor(font_scale_factor*window_height/30) + "px";
 	var large_text = Math.floor(font_scale_factor*window_height/20) + "px";
 	var padding    = Math.floor(font_scale_factor*window_height/100) + "px";
 	var scroller_height = (Math.floor(font_scale_factor*window_height/30)+Math.floor(font_scale_factor*window_height/100)) + "px";
 	
 	// bigger fonts for wider displays
-	if (jQuery(window).width()/jQuery(window).height() > 1.4) {
-		window_height = jQuery(window).height();
+	if (jQuery("body").innerWidth()/window_height > 1.4) {
 		basic_text = Math.floor(font_scale_factor*window_height/22) + "px";
 		large_text = Math.floor(font_scale_factor*window_height/14) + "px";
 		padding    = Math.floor(font_scale_factor*window_height/100) + "px";
@@ -361,12 +386,7 @@ transitBoardByLine.initializePage = function(data) {
 			table.trip_wrapper { font-size: '+base_em_size+'px; }\
 		</style>\
 	'));	
-	
- 	
-	var bottom_height = jQuery(window).height() - jQuery("#tb_bottom").offset().top;
-
-	jQuery("body").css("padding-bottom",bottom_height+"px");
-	
+		
 	// minimize width of route and arrival elements
 	var route_cell_width = jQuery("#trip1 td.route").width();
 	var route_text_width = jQuery("#trip1 td.route span").width();
@@ -884,6 +904,9 @@ head.ready(function() {
 			    url: 'http://transitappliance.com/cgi-bin/js_error.pl',
 			    type: 'POST',
 			    data: {
+					  	applicationName: 			transitBoardByLine.APP_NAME,
+					  	applicationVersion: 	transitBoardByLine.APP_VERSION,
+					  	applicationId: 				transitBoardByLine.APP_ID,
 			    		errorUUID: error_uuid,
 			        browserUrl: window.location.href,
 			        userAgent: navigator.userAgent,
