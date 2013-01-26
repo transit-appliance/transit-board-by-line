@@ -19,7 +19,7 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.10";
+transitBoardByLine.APP_VERSION 	= "2.11";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
@@ -73,7 +73,9 @@ if (!transitBoardByLine.is_development) {
 head.js.apply(undefined,transitBoardByLine.dependencies);
 
 head.ready(function() {
-   transitBoardByLine.start_time_formatted = new Date().toString("MM/dd hh:mmt");
+	setTimeout(function(){
+   transitBoardByLine.start_time_formatted = localTime(new Date()).toString("MM/dd hh:mmt");
+  },1000);
 });
 
 transitBoardByLine.paging_state = {}; // paging state
