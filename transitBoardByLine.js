@@ -19,7 +19,7 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.11";
+transitBoardByLine.APP_VERSION 	= "2.12";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
@@ -74,7 +74,7 @@ head.js.apply(undefined,transitBoardByLine.dependencies);
 
 head.ready(function() {
 	setTimeout(function(){
-   transitBoardByLine.start_time_formatted = localTime(new Date()).toString("MM/dd hh:mmt");
+   
   },1000);
 });
 
@@ -205,6 +205,7 @@ transitBoardByLine.initializePage = function(data) {
 	jQuery("#arrivals_log_area").remove();
 	
 	transitBoardByLine.displayInterval = data.displayInterval;
+	transitBoardByLine.start_time_formatted = localTime(new Date()).toString("MM/dd hh:mmt");
 	
 	
 	if (data.applianceConfig != undefined && data.applianceConfig.id != undefined && data.applianceConfig.id[0] != undefined) {
@@ -437,7 +438,8 @@ transitBoardByLine.initializePage = function(data) {
 			transitBoardByLine.max_available_height = jQuery("#tb_bottom").offset().top - jQuery("#tb_middle").offset().top - 20;
 			transitBoardByLine.rows_per_screen = Math.floor(transitBoardByLine.max_available_height/trip_height);
 			transitBoardByLine.max_available_height = transitBoardByLine.rows_per_screen*trip_height;
-			transitBoardByLine.animation_step = Math.ceil(transitBoardByLine.rows_per_screen/3)*trip_height;
+			transitBoardByLine.animation_step_rows = Math.ceil(transitBoardByLine.rows_per_screen/3);
+			transitBoardByLine.animation_step = transitBoardByLine.animation_step_rows*trip_height;
 
 			
 			// set the height of the div
@@ -453,10 +455,27 @@ transitBoardByLine.initializePage = function(data) {
 	
 }
 
-transitBoardByLine.do_animation_step = function(animation_target,animation_step_time) {
+transitBoardByLine.do_animation_step = function(total_rows,total_steps,remaining_rows,remaining_steps) {
+	
+	/*
+		figure out step pattern
+		
+		general goal is to scroll 1/3 of visible entries in each step, but we don't want 'orphans'
+		e.g., instead of 3,3,3,1 we'd rather do 3,3,2,2
+	*/	
+
+	var rows_this_step = Math.ceil(remaining_rows/remaining_steps);
+	
+	remaining_rows = remaining_rows - rows_this_step;
+	remaining_steps--;
+	
+	var step_time_per_row = transitBoardByLine.animation_factor*transitBoardByLine.displayInterval/(4*total_rows);
+	
+	var animation_step_time = step_time_per_row * rows_this_step;
+	var animation_target = -transitBoardByLine.isotope_container.height()/2;
 		
 	var current_top = parseInt(jQuery('#arrivals_outer_wrapper').css("top"));
-	var target_top = current_top - transitBoardByLine.animation_step;
+	var target_top = current_top - transitBoardByLine.trip_height*rows_this_step;
 	//alert("current top: "+current_top+", target: "+target_top);
 	var last = false;
 	if (target_top <= animation_target) {
@@ -474,7 +493,7 @@ transitBoardByLine.do_animation_step = function(animation_target,animation_step_
 			transitBoardByLine.rotation_complete = true;
 		} else {
 			setTimeout(function() {
-				transitBoardByLine.do_animation_step(animation_target,animation_step_time);
+				transitBoardByLine.do_animation_step(total_rows,total_steps,remaining_rows,remaining_steps);
 			},animation_step_time*3);
 			transitBoardByLine.advanceMessage();
 		}
@@ -483,26 +502,41 @@ transitBoardByLine.do_animation_step = function(animation_target,animation_step_
 
 transitBoardByLine.animate_display = function() {
 	
+	/* 
+		This method is resposible for 'scrolling' the display if there are more rows of arrivals than will fit on the screen.
+		
+		This is accomplished by have two copies (bank1 and bank2) of the arrivals listing so that if we move the div with the arrivals up, 
+		the first (top) arrival shows at the bottom, etc.
+		
+		If there are not more arrivals than will fit, bank2 is hidden
+	*/
+	
+	/* create a list of all the ids for the arrivals that we can use for manipulation */
+	
 	var trip_ids = [];
 	jQuery(".trip_wrapper.bank1.active").each(function(index,item){
 		trip_ids.push(jQuery(item).attr("data-tripid"));
 	});
-	var rows = Math.ceil(trip_ids.length/transitBoardByLine.columns);
 	
-	
-	
+	/* compute number of rows */
+	var total_rows = Math.ceil(trip_ids.length/transitBoardByLine.columns);
+	var total_steps = Math.ceil(total_rows/transitBoardByLine.animation_step_rows);
+		
 	var animation_start = new Date();
-	if (rows > transitBoardByLine.rows_per_screen && !transitBoardByLine.suppress_scrolling) {
+	if (total_rows > transitBoardByLine.rows_per_screen && !transitBoardByLine.suppress_scrolling) {
+		/* we have more rows than we can show in one screen, so we rotate */
+		
+		/* activate both banks of arrivals */
 		transitBoardByLine.isotope_container.isotope({ filter: '.active' }).isotope( 'reLayout' ).isotope();
+		
 		if (transitBoardByLine.rotation_complete) {
-			transitBoardByLine.rotation_complete = false;
-			//jQuery(".trip_wrapper").width(transitBoardByLine.target_width);
-			var animation_step_time = Math.floor((transitBoardByLine.animation_factor*(transitBoardByLine.displayInterval)/4)*transitBoardByLine.animation_step/(transitBoardByLine.isotope_container.height()/2));
-			var animation_target = -transitBoardByLine.isotope_container.height()/2;
-			jQuery('#arrivals_outer_wrapper').css("top","0px");
+			/* ensure that we completed last rotation */
+			transitBoardByLine.rotation_complete = false; /* reset done flag */
+			
+			jQuery('#arrivals_outer_wrapper').css("top","0px"); // reset to top, in case we drifted somehow
 
 			setTimeout(function() {
-				transitBoardByLine.do_animation_step(animation_target,animation_step_time);
+				transitBoardByLine.do_animation_step(total_rows,total_steps,total_rows,total_steps);
 			},2000); // initial two second delay in starting animation
 		} else {
 			//fell behind, so we don't animate stops
@@ -511,7 +545,11 @@ transitBoardByLine.animate_display = function() {
 			}
 		}
 	} else {
+		/* everything fits on one screen, just worry about rotating messages in bottom pane */
+		
+		/* hide second bank of arrivals */
 		transitBoardByLine.isotope_container.isotope({ filter: '.bank1.active' }).isotope( 'reLayout' ).isotope();
+		
 		// need to rotate message
 		var message_interval = transitBoardByLine.displayInterval/4;
 		// 3 times
