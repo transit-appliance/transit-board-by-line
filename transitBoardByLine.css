@@ -317,19 +317,19 @@ div.trip.service_color_spacer div.destination_wrapper {
 
 #arrivals_outer_wrapper {
 
-	transition-property: top;
+	transition-property: all;
 	transition-duration: 0s;
 	transition-timing-function: linear;
 	transition-delay: 0s;
 	/* Firefox 4 */
-	-moz-transition-property:top;
+	-moz-transition-property: all;
 	-moz-transition-duration:0s;
-	-moz-transition-timing-function:linear;
+	-moz-transition-timing-function: linear;
 	-moz-transition-delay:0s;
 	/* Safari and Chrome */
-	-webkit-transition-property:top;
+	-webkit-transition-property: all;
 	-webkit-transition-duration:0s;
-	-webkit-transition-timing-function:linear;
+	-webkit-transition-timing-function: linear;
 	-webkit-transition-delay:0s;
 }
 
