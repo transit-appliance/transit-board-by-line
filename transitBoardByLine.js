@@ -19,7 +19,7 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.12";
+transitBoardByLine.APP_VERSION 	= "2.13";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
@@ -37,6 +37,7 @@ transitBoardByLine.dependencies = [
 		"../assets/js/libraries/tzdate.js",
 		"../assets/js/libraries/jquery-ui-1.8.7.custom.min.js",	
 		"../assets/js/libraries/date.js",
+		//"../assets/js/libraries/animation_frame.js",
 		"../assets/js/trArrUtilities.js",	
 		"../assets/js/trStopCache.js",
 		"../assets/js/trAgencyCache.js",
@@ -71,12 +72,6 @@ if (!transitBoardByLine.is_development) {
 }());
 
 head.js.apply(undefined,transitBoardByLine.dependencies);
-
-head.ready(function() {
-	setTimeout(function(){
-   
-  },1000);
-});
 
 transitBoardByLine.paging_state = {}; // paging state
 transitBoardByLine.paging_state.next_row = undefined;
@@ -469,6 +464,8 @@ transitBoardByLine.do_animation_step = function(total_rows,total_steps,remaining
 	remaining_rows = remaining_rows - rows_this_step;
 	remaining_steps--;
 	
+	var cumulative_rows = total_rows - remaining_rows;
+	
 	var step_time_per_row = transitBoardByLine.animation_factor*transitBoardByLine.displayInterval/(4*total_rows);
 	
 	var animation_step_time = step_time_per_row * rows_this_step;
@@ -484,12 +481,21 @@ transitBoardByLine.do_animation_step = function(total_rows,total_steps,remaining
 	}
 	var duration = (animation_step_time/2)+"ms";
 	jQuery('#arrivals_outer_wrapper').css({"transition-duration": duration, "-webkit-transition-duration": duration, "-moz-transition-duration": duration});
-	jQuery('#arrivals_outer_wrapper').css("top", target_top);
+	//jQuery('#arrivals_outer_wrapper').css("top", target_top);
+	//alert(target_top);
+	var transform_value = "translateY("+-1*cumulative_rows*transitBoardByLine.trip_height+"px)";
+	if (cumulative_rows == total_rows) {
+		last = true;
+	}
+	//alert(transform_value);
+	jQuery('#arrivals_outer_wrapper').css("transform",transform_value).css("-webkit-transform",transform_value).css("-moz-transform",transform_value);
+	//alert(jQuery('#arrivals_outer_wrapper').css("-webkit-transform"));
 	
 	setTimeout(function() {
 		if (last) {
-			jQuery('#arrivals_outer_wrapper').css({"transition-duration": "0s", "-webkit-transition-duration": "0s", "-moz-transition-duration": "0s"});
+			jQuery('#arrivals_outer_wrapper').css({"transition-duration": "0s", "-webkit-transition-duration": "0s", "-moz-transition-duration": "0s", "-ms-transition-duration": "0s"});
 			jQuery('#arrivals_outer_wrapper').css("top","0");
+			jQuery('#arrivals_outer_wrapper').css({"transform": "translateY(0px)", "-webkit-transform": "translateY(0px)", "-moz-transform": "translateY(0px)", "-ms-transform": "translateY(0px)"});
 			transitBoardByLine.rotation_complete = true;
 		} else {
 			setTimeout(function() {
@@ -499,6 +505,8 @@ transitBoardByLine.do_animation_step = function(total_rows,total_steps,remaining
 		}
 	},animation_step_time);
 }
+
+
 
 transitBoardByLine.animate_display = function() {
 	
@@ -534,6 +542,7 @@ transitBoardByLine.animate_display = function() {
 			transitBoardByLine.rotation_complete = false; /* reset done flag */
 			
 			jQuery('#arrivals_outer_wrapper').css("top","0px"); // reset to top, in case we drifted somehow
+			jQuery('#arrivals_outer_wrapper').css({"transform": "translateY(0px)", "-webkit-transform": "translateY(0px)", "-moz-transform": "translateY(0px)", "-ms-transform": "translateY(0px)"});
 
 			setTimeout(function() {
 				transitBoardByLine.do_animation_step(total_rows,total_steps,total_rows,total_steps);
