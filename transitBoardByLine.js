@@ -19,7 +19,7 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.13";
+transitBoardByLine.APP_VERSION 	= "2.14";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
@@ -41,6 +41,7 @@ transitBoardByLine.dependencies = [
 		"../assets/js/trArrUtilities.js",	
 		"../assets/js/trStopCache.js",
 		"../assets/js/trAgencyCache.js",
+		"../assets/js/trLoader.js",
 		"../assets/js/trArr.js",
 		"../assets/js/libraries/jquery.isotope.js",
 		"../assets/js/trCar2Go.js"
@@ -127,6 +128,9 @@ transitBoardByLine.resetMessageQueue = function() {
 	// raw score: messages.push('<span style="font-weight: bold; color: red">['+transitBoardByLine.connection_health+']</span>');
 	if (transitBoardByLine.connection_health < 0.2) {
 		transitBoardByLine.messages.push('<span style="font-weight: bold; color: red">This display has lost connectivity.</span>');
+		if (transitBoardByLine.appliance_id != "Unassigned") {
+			trLoader(transitBoardByLine.appliance_id);
+		}
 	} else if (transitBoardByLine.connection_health < 0.5) {
 		transitBoardByLine.messages.push('<span style="font-weight: bold; color: red">This display is experencing severe connection issues.</span>');
 	} else if (transitBoardByLine.connection_health < 0.8) {
