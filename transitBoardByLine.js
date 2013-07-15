@@ -204,6 +204,10 @@ transitBoardByLine.initializePage = function(data) {
 	jQuery("#arrivals_log_area").remove();
 	
 	transitBoardByLine.displayInterval = data.displayInterval;
+	if (data.optionsConfig != undefined && data.optionsConfig.display_interval != undefined && data.optionsConfig.display_interval[0] != undefined) {
+		transitBoardByLine.displayInterval = data.optionsConfig.display_interval[0]*1000;
+	}	
+	
 	transitBoardByLine.start_time_formatted = localTime(new Date()).toString("MM/dd hh:mmt");
 	
 	
@@ -603,7 +607,10 @@ transitBoardByLine.displayPage = function(data, callback) {
 		  layoutMode: 'masonry',  
 			getSortData : {
 			  sortkey : function ( $elem ) {
-			  	var bank = $elem.attr('data-bank').replace('bank','');
+			  	var bank = 0;
+			  	if ($elem.attr('data-bank')) {
+			  		bank = $elem.attr('data-bank').replace('bank','');
+			  	}
 			    return parseInt(bank)*10000000 +parseInt($elem.attr('data-sortkey'));
 			  }
 			},
