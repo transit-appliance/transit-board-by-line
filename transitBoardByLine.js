@@ -940,50 +940,37 @@ function filter_queue(arrivalsQueue) {
 head.ready(function() {
 	
 	// set up error handler if not on development site
-	if (!transitBoardByLine.is_development) {
-		function GUID ()
-		{
-		    var S4 = function ()
-		    {
-		        return Math.floor(
-		                Math.random() * 0x10000 /* 65536 */
-		            ).toString(16);
-		    };
-		
-		    return (
-		            S4() + S4() + "-" +
-		            S4() + "-" +
-		            S4() + "-" +
-		            S4() + "-" +
-		            S4() + S4() + S4()
-		        );
-		}
-		
-		var error_uuid = GUID();
-		
-		TraceKit.report.subscribe(function (stackInfo) {   
-			var serialized_stack = JSON.stringify(stackInfo);
-			if (serialized_stack.match(/tracekit/)) {
-				// don't track self-referential tracekit errors
-			} else {
-				jQuery.ajax({
-				    url: 'http://transitappliance.com/cgi-bin/js_error.pl',
-				    type: 'POST',
-				    data: {
-						  	applicationName: 			transitBoardByLine.APP_NAME,
-						  	applicationVersion: 	transitBoardByLine.APP_VERSION,
-						  	applicationId: 				transitBoardByLine.APP_ID,
-				    		errorUUID: error_uuid,
-				        browserUrl: window.location.href,
-				        userAgent: navigator.userAgent,
-				        stackInfo: serialized_stack
-				    }
-				});
-			}
-		});
-		
-		//throw new Error("Startup Event");
+	
+	var handler_url = "http://transitappliance.com/cgi-bin/js_error.pl";
+	if (transitBoardByLine.is_development) {
+		handler_url = "http://transitappliance.com/cgi-bin/js_error_dev.pl";
 	}
+		
+	TraceKit.report.subscribe(function (stackInfo) {   
+		var serialized_stack = JSON.stringify(stackInfo);
+		if (serialized_stack.match(/tracekit/)) {
+			// don't track self-referential tracekit errors
+		} else {
+			jQuery.ajax({
+			    url: handler_url,
+			    type: 'POST',
+			    data: {
+					  	applicationName: 			transitBoardByLine.APP_NAME,
+					  	applicationVersion: 	transitBoardByLine.APP_VERSION,
+					  	applicationId: 				transitBoardByLine.APP_ID,
+					  	applianceId:					transitBoardByLine.appliance_id || "Unassigned",
+			        browserUrl: 					window.location.href,
+			        codeFile:							stackInfo.url,
+			        message:							stackInfo.message,
+			        userAgent: 						navigator.userAgent,
+			        stackInfo: 						serialized_stack
+			    }
+			});
+		}
+	});
+	
+	// throw new Error("Startup Event");
+	
 	
   trArr({
   	applicationName: 			transitBoardByLine.APP_NAME,
