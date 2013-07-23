@@ -33,6 +33,7 @@ transitBoardByLine.isChumby = navigator.userAgent.match(/QtEmb/) != null;
 // load dependencies
 
 transitBoardByLine.dependencies = [
+		"../assets/js/tracekit.js",
 		"../assets/js/libraries/fleegix.js",
 		"../assets/js/libraries/tzdate.js",
 		"../assets/js/libraries/jquery-ui-1.8.7.custom.min.js",	
@@ -48,10 +49,11 @@ transitBoardByLine.dependencies = [
 ];
 
 
-
+/*
 if (!transitBoardByLine.is_development) {
 	transitBoardByLine.dependencies.push("../assets/js/tracekit.js");
 }
+*/
 
 (function () {
 
@@ -960,21 +962,26 @@ head.ready(function() {
 		var error_uuid = GUID();
 		
 		TraceKit.report.subscribe(function (stackInfo) {   
-			jQuery.ajax({
-			    url: 'http://transitappliance.com/cgi-bin/js_error.pl',
-			    type: 'POST',
-			    data: {
-					  	applicationName: 			transitBoardByLine.APP_NAME,
-					  	applicationVersion: 	transitBoardByLine.APP_VERSION,
-					  	applicationId: 				transitBoardByLine.APP_ID,
-			    		errorUUID: error_uuid,
-			        browserUrl: window.location.href,
-			        userAgent: navigator.userAgent,
-			        stackInfo: JSON.stringify(stackInfo)
-			    }
-			});
+			var serialized_stack = JSON.stringify(stackInfo);
+			if (serialized_stack.match(/tracekit/)) {
+				// don't track self-referential tracekit errors
+			} else {
+				jQuery.ajax({
+				    url: 'http://transitappliance.com/cgi-bin/js_error.pl',
+				    type: 'POST',
+				    data: {
+						  	applicationName: 			transitBoardByLine.APP_NAME,
+						  	applicationVersion: 	transitBoardByLine.APP_VERSION,
+						  	applicationId: 				transitBoardByLine.APP_ID,
+				    		errorUUID: error_uuid,
+				        browserUrl: window.location.href,
+				        userAgent: navigator.userAgent,
+				        stackInfo: serialized_stack
+				    }
+				});
+			}
 		});
-	
+		
 		//throw new Error("Startup Event");
 	}
 	
