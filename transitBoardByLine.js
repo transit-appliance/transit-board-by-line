@@ -19,7 +19,7 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.14";
+transitBoardByLine.APP_VERSION 	= "2.15";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
