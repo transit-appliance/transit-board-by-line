@@ -99,6 +99,7 @@ transitBoardByLine.isotope_container = null;
 transitBoardByLine.standing_messages.push("<span>TransitBoard&trade; is a product of Portland Transport.</span>");
 transitBoardByLine.standing_messages.push("<span>Learn more at http://transitappliance.com</span>");
 
+
 transitBoardByLine.formatted_arrival_time = function(arrival) {
 	var displayTime = "";
 	var milliseconds_until_arrival = arrival.arrivalTime - new Date();
@@ -202,6 +203,11 @@ transitBoardByLine.initializePage = function(data) {
 	}
 	
 
+	if (jQuery("body").innerWidth() < jQuery("body").innerHeight()) {
+		jQuery("body").addClass('tb_portrait');
+	}
+	
+
 	// kill the logging element
 	jQuery("#arrivals_log_area").remove();
 	
@@ -293,6 +299,7 @@ transitBoardByLine.initializePage = function(data) {
 	// set sizes
 	var window_height = jQuery("body").innerHeight();
 	var basic_text = Math.floor(font_scale_factor*window_height/30) + "px";
+	var double_text = Math.floor(font_scale_factor*window_height/15) + "px";
 	var large_text = Math.floor(font_scale_factor*window_height/20) + "px";
 	var padding    = Math.floor(font_scale_factor*window_height/100) + "px";
 	var scroller_height = (Math.floor(font_scale_factor*window_height/30)+Math.floor(font_scale_factor*window_height/100)) + "px";
@@ -300,6 +307,7 @@ transitBoardByLine.initializePage = function(data) {
 	// bigger fonts for wider displays
 	if (jQuery("body").innerWidth()/window_height > 1.4) {
 		basic_text = Math.floor(font_scale_factor*window_height/22) + "px";
+		double_text = Math.floor(font_scale_factor*window_height/11) + "px";
 		large_text = Math.floor(font_scale_factor*window_height/14) + "px";
 		padding    = Math.floor(font_scale_factor*window_height/100) + "px";
 		scroller_height = (Math.floor(font_scale_factor*window_height/22)+Math.floor(font_scale_factor*window_height/100)) + "px";
@@ -309,6 +317,9 @@ transitBoardByLine.initializePage = function(data) {
 	jQuery("head").append(jQuery('\
 		<style>\
 			#tb_bottom td { font-size: '+basic_text+';}\
+			body.tb_portrait #tb_bottom td { font-size: '+double_text+';}\
+			body.tb_portrait #tb_bottom td#tb_ticker { font-size: '+basic_text+';}\
+			body.tb_portrait #tb_bottom td#tb_ticker td { font-size: '+basic_text+';}\
 			h1 { font-size: '+large_text+'; margin-bottom: '+padding+'; }\
 			body { overflow: hidden }\
 		</style>\
