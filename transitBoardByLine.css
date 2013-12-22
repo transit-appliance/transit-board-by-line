@@ -1,4 +1,3 @@
-
 body { 
 	font-family: DejaVuSansBold, sans-serif; 
 	background-color: #FFFFFF; 
@@ -274,6 +273,20 @@ table.trip_wrapper tbody.service_color_car2go td.arrivals {
 	color: black;
 	background-color: white;
   border-color: #009BE0;
+}
+
+table.trip_wrapper tbody.service_color_weather td.route,
+table.trip_wrapper tbody.service_color_weather td.destination,
+table.trip_wrapper tbody.service_color_weather td.destination div,
+div.trip.service_color_weather div.route_wrapper, 
+div.trip.service_color_weather div.destination_wrapper {
+	border-color: gold;
+}
+
+table.trip_wrapper tbody.service_color_weather td.arrivals {
+	color: black;
+	background-color: white;
+  border-color: gold;
 }
 
 table.trip_wrapper tbody.service_color_spacer td.route,

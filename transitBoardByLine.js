@@ -19,7 +19,7 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.15";
+transitBoardByLine.APP_VERSION 	= "2.16";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // assess environment
@@ -45,7 +45,8 @@ transitBoardByLine.dependencies = [
 		"../assets/js/trLoader.js",
 		"../assets/js/trArr.js",
 		"../assets/js/libraries/jquery.isotope.js",
-		"../assets/js/trCar2Go.js"
+		"../assets/js/trCar2Go.js",
+		"../assets/js/trWeather.js"
 ];
 
 
@@ -91,6 +92,7 @@ transitBoardByLine.animation_factor = 0.85; // arbitrary value to allow for paus
 transitBoardByLine.messages = [];
 transitBoardByLine.start_time = new Date();
 transitBoardByLine.car2go = 0;
+transitBoardByLine.weather = false;
 transitBoardByLine.suppress_scrolling = false;
 transitBoardByLine.suppress_downtown_only = false;
 
@@ -183,6 +185,12 @@ transitBoardByLine.initializePage = function(data) {
 	jQuery("body").css('border-bottom-width',bottom_border);
 	jQuery("body").css('position','relative'); // for reasons I haven't figured out, this has to be set late
 	
+	if (data.applianceConfig != undefined && data.applianceConfig.id != undefined && data.applianceConfig.id[0] != undefined) {
+		transitBoardByLine.appliance_id = data.applianceConfig.id[0];
+	} else {
+		transitBoardByLine.appliance_id = "Unassigned";
+	}
+	
 	// initialize car2go object if needed
 	
 	if (data.optionsConfig != undefined && data.optionsConfig.lat != undefined && data.optionsConfig.lat[0] != undefined) {
@@ -198,6 +206,19 @@ transitBoardByLine.initializePage = function(data) {
 						num_vehicles: transitBoardByLine.car2go
 					});
 				}
+			}
+		}
+	}
+	
+	if (data.optionsConfig != undefined && data.optionsConfig.lat != undefined && data.optionsConfig.lat[0] != undefined) {
+		if (data.optionsConfig.lng != undefined && data.optionsConfig.lng[0] != undefined) {
+			if (data.optionsConfig != undefined && data.optionsConfig.show_weather != undefined && data.optionsConfig.show_weather[0] != undefined) {
+				transitBoardByLine.weather = true;
+				transitBoardByLine.forecast = new trWeather({
+					id:		transitBoardByLine.appliance_id,
+					lat: 	data.optionsConfig.lat[0],
+					lng: 	data.optionsConfig.lng[0]
+				});
 			}
 		}
 	}
@@ -219,11 +240,7 @@ transitBoardByLine.initializePage = function(data) {
 	transitBoardByLine.start_time_formatted = localTime(new Date()).toString("MM/dd hh:mmt");
 	
 	
-	if (data.applianceConfig != undefined && data.applianceConfig.id != undefined && data.applianceConfig.id[0] != undefined) {
-		transitBoardByLine.appliance_id = data.applianceConfig.id[0];
-	} else {
-		transitBoardByLine.appliance_id = "Unassigned";
-	}
+
 	
 	if (data.optionsConfig.banner != undefined && data.optionsConfig.banner[0] != undefined) {
 		var banner = data.optionsConfig.banner[0];
@@ -328,6 +345,9 @@ transitBoardByLine.initializePage = function(data) {
 	// get the rights strings
 	for (var agency in data.stopsConfig) {
 		transitBoardByLine.standing_messages.push("<span>"+data.agencyCache.agencyData(agency).rights_notice+"</span>");
+	}
+	if (transitBoardByLine.weather) {
+		transitBoardByLine.standing_messages.push("<span>Weather Powered by Forecast</span>");
 	}
 	transitBoardByLine.standing_messages.push("<span>HH:MM = scheduled arrival, real-time estimate unavailable.</span>");
 		
@@ -747,6 +767,10 @@ transitBoardByLine.displayPage = function(data, callback) {
 	// now do spacers to get balanced columns
 	
 	var display_elements = sorted_trip_keys.length + parseInt(transitBoardByLine.car2go);
+	if (transitBoardByLine.weather) {
+		display_elements = display_elements + 1;
+	}
+	
 	var remainder = display_elements % transitBoardByLine.columns;
 
 	if (remainder > 0) {
@@ -826,7 +850,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 	// see if we need to delete any elements
 	jQuery("table.trip_wrapper.active").each(function(index,element){
 		var id = jQuery(element).attr("data-tripid");
-		if ( trip_objects[id] == null && !id.match(/car2go/) ) {
+		if ( trip_objects[id] == null && !id.match(/car2go/)  && !id.match(/weather/) ) {
 			jQuery("table."+id).removeClass('active');
 			removal_queue.push(id);
 		}
@@ -865,7 +889,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 				}
 				if (jQuery(".car2go"+i).length == 0) {
 					var car = '\
-							<table class="car2go car2go'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="90000" data-bank="bank_placeholder" data-tripid="car2go'+i+'">\
+							<table class="car2go car2go'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="80000" data-bank="bank_placeholder" data-tripid="car2go'+i+'">\
 								<tbody class="trip service_color_car2go">\
 									<tr valign="middle">\
 										<td class="route"><img src="../assets/images/car2go/car2go_vehicle.jpg"></td>\
@@ -894,6 +918,46 @@ transitBoardByLine.displayPage = function(data, callback) {
 			}
 		}
 	}
+	
+	if (transitBoardByLine.weather) {
+		if (transitBoardByLine.forecast.weather_is_current()) {
+			if (jQuery(".weather").length == 0) {
+				// create entries
+				var weather = '\
+						<table class="weather trip_wrapper active isotope-item bank_placeholder" data-sortkey="90000" data-bank="bank_placeholder" data-tripid="weather">\
+							<tbody class="trip service_color_weather">\
+								<tr valign="middle">\
+									<td class="route">'+transitBoardByLine.forecast.get_icon()+'</td>\
+									<td class="destination"><div><span class="terminus">'+transitBoardByLine.forecast.get_summary_forecast()+'</span></div></td>\
+									<td class="arrivals">'+transitBoardByLine.forecast.get_temperature()+'</td>\
+								</tr>\
+							</tbody>\
+						</table>\
+				';
+				jQuery.each(transitBoardByLine.banks,function(index,bank) {
+					var weather_string = weather.replace(/bank_placeholder/g,bank);
+					transitBoardByLine.isotope_container.isotope( 'insert', jQuery(weather_string) );
+				});
+			} else {
+				// update the entries
+				jQuery("table.trip_wrapper.active").each(function(index,element){
+					jQuery('.weather .route').html(transitBoardByLine.forecast.get_icon());
+					jQuery('.weather td.destination div span').html(transitBoardByLine.forecast.get_summary_forecast());
+					jQuery('.weather .arrivals').html(transitBoardByLine.forecast.get_temperature());
+				});
+			}
+		} else {
+			// remove the entries, they're not current
+			jQuery("table.trip_wrapper.active").each(function(index,element){
+				var id = jQuery(element).attr("data-tripid");
+				if ( id.match(/weather/) ) {
+					jQuery("table."+id).removeClass('active');
+					removal_queue.push(id);
+				}
+			});
+		}
+	}
+		
 	
 	process_removals();
 	
