@@ -212,8 +212,8 @@ transitBoardByLine.initializePage = function(data) {
 	
 	if (data.optionsConfig != undefined && data.optionsConfig.lat != undefined && data.optionsConfig.lat[0] != undefined) {
 		if (data.optionsConfig.lng != undefined && data.optionsConfig.lng[0] != undefined) {
-			if (data.optionsConfig != undefined && data.optionsConfig.show_weather != undefined && data.optionsConfig.show_weather[0] != undefined) {
-				transitBoardByLine.weather = true;
+			if (data.optionsConfig != undefined && data.optionsConfig.show_weather != undefined && data.optionsConfig.show_weather[0] != undefined && data.optionsConfig.show_weather[0] != 0) {
+				transitBoardByLine.weather = data.optionsConfig.show_weather[0];
 				transitBoardByLine.forecast = new trWeather({
 					id:		transitBoardByLine.appliance_id,
 					lat: 	data.optionsConfig.lat[0],
@@ -922,9 +922,13 @@ transitBoardByLine.displayPage = function(data, callback) {
 	if (transitBoardByLine.weather) {
 		if (transitBoardByLine.forecast.weather_is_current()) {
 			if (jQuery(".weather").length == 0) {
+				var sortkey = "90000";
+				if (transitBoardByLine.weather == "top") {
+					sortkey = "00000";
+				}
 				// create entries
 				var weather = '\
-						<table class="weather trip_wrapper active isotope-item bank_placeholder" data-sortkey="90000" data-bank="bank_placeholder" data-tripid="weather">\
+						<table class="weather trip_wrapper active isotope-item bank_placeholder" data-sortkey="'+sortkey+'" data-bank="bank_placeholder" data-tripid="weather">\
 							<tbody class="trip service_color_weather">\
 								<tr valign="middle">\
 									<td class="route">'+transitBoardByLine.forecast.get_icon()+'</td>\
