@@ -19,8 +19,10 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.16";
+transitBoardByLine.APP_VERSION 	= "2.17";
 transitBoardByLine.APP_ID 			= "tbdbyline";
+
+// v2.17 - upgrade jQuery to 1.11.0
 
 // assess environment
 
