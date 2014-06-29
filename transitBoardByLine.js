@@ -96,6 +96,7 @@ transitBoardByLine.start_time = new Date();
 transitBoardByLine.car2go = 0;
 transitBoardByLine.weather = false;
 transitBoardByLine.suppress_scrolling = false;
+transitBoardByLine.alerts = false;
 transitBoardByLine.suppress_downtown_only = false;
 
 transitBoardByLine.isotope_container = null;
@@ -261,6 +262,10 @@ transitBoardByLine.initializePage = function(data) {
 		transitBoardByLine.suppress_scrolling = true;
 		transitBoardByLine.banks = ['bank1'];
 	}
+	
+	if (data.optionsConfig.alerts != undefined && data.optionsConfig.alerts[0] != undefined && data.optionsConfig.alerts[0] != "" && data.optionsConfig.alerts[0] != 0) {
+		transitBoardByLine.alerts = true;
+	}	
 	
 	if (data.optionsConfig.suppress_downtown_only != undefined && data.optionsConfig.suppress_downtown_only[0] != undefined && data.optionsConfig.suppress_downtown_only[0] != "" && data.optionsConfig.suppress_downtown_only[0] != 0) {
 		transitBoardByLine.suppress_downtown_only = true;
@@ -620,6 +625,10 @@ transitBoardByLine.displayPage = function(data, callback) {
 	var running_time = new Date() - transitBoardByLine.start_time;
 	var running_minutes = Math.floor(running_time/(60*1000));
 	var client_time = localTime();
+	
+	if (transitBoardByLine.alerts) {
+		transitBoardByLine.service_messages = data.serviceMessages;
+	}
 	
 	if (running_minutes > 65 && client_time.getHours() == 3 && transitBoardByLine.isChumby) {
 		location.reload();
