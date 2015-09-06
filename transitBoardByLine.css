@@ -261,6 +261,17 @@ div.trip.tbody.route_194 div.destination_wrapper {
 	color: white;
 }
 
+table.trip_wrapper tbody.route_195 td.route,
+table.trip_wrapper tbody.route_195 td.destination,
+table.trip_wrapper tbody.route_195 td.destination div,
+div.trip.tbody.route_195 div.route_wrapper, 
+div.trip.tbody.route_195 div.destination_wrapper {
+
+	background-color: #DF1990;
+	border-color: #DF1990;
+	color: white;
+}
+
 table.trip_wrapper tbody.service_color_car2go td.route,
 table.trip_wrapper tbody.service_color_car2go td.destination,
 table.trip_wrapper tbody.service_color_car2go td.destination div,

@@ -678,11 +678,15 @@ transitBoardByLine.displayPage = function(data, callback) {
 			filtered_queue[i].app_color = filtered_queue[i].app_headsign_less_route.replace(/ .*$/,"").toLowerCase();
 		} else if (filtered_queue[i].route_id == "193") {
 			filtered_queue[i].app_route_id = "NS";
-			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("NS Line","");		
+			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("Portland Streetcar","");		
 			filtered_queue[i].app_color = 'streetcar'
 		} else if (filtered_queue[i].route_id == "194") {
-			filtered_queue[i].app_route_id = "CL";
-			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("CL Line","");		
+			filtered_queue[i].app_route_id = "A";
+			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("Portland Streetcar","");		
+			filtered_queue[i].app_color = 'streetcar'
+		} else if (filtered_queue[i].route_id == "195") {
+			filtered_queue[i].app_route_id = "B";
+			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("Portland Streetcar","");		
 			filtered_queue[i].app_color = 'streetcar'
 		} else {		
 			var route_name = filtered_queue[i].route_data.route_short_name || filtered_queue[i].route_data.route_long_name;
