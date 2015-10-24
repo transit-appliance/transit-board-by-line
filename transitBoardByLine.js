@@ -19,10 +19,11 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.17";
+transitBoardByLine.APP_VERSION 	= "2.18";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // v2.17 - upgrade jQuery to 1.11.0
+// v2.18 - add classes to enable PCC styling
 
 // assess environment
 
@@ -695,6 +696,10 @@ transitBoardByLine.displayPage = function(data, callback) {
 			filtered_queue[i].app_color = filtered_queue[i].route_data.service_class;
 		}
 		
+		if (filtered_queue[i].agency == 'PCC') {
+			filtered_queue[i].app_route_id = "PCC";
+		}
+		
 		// highlight terminus
 		if (filtered_queue[i].app_headsign_less_route.match(/ to /i)) {
 			filtered_queue[i].app_headsign_less_route = filtered_queue[i].app_headsign_less_route.replace(/ to /i," to <span class=\"terminus\">")+"</span>";
@@ -771,7 +776,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 		trip_inner += "<td class=\"arrivals\">"+trip_arrival+"</td></tr>";
 		
 
-		var by_trip_html = "<table class=\""+trip_key+" trip_wrapper active bank_placeholder\" data-bank=\"bank_placeholder\" data-sortkey=\""+by_trip[trip_key].sort_key+"\" data-tripid=\""+trip_key+"\"><tbody class=\"trip service_color_"+by_trip[trip_key].arrivals[0].app_color+" route_"+by_trip[trip_key].arrivals[0].route_id+" direction_"+by_trip[trip_key].arrivals[0].route_data.direction_id+"\">\n";
+		var by_trip_html = "<table class=\""+trip_key+" trip_wrapper active bank_placeholder\" data-bank=\"bank_placeholder\" data-sortkey=\""+by_trip[trip_key].sort_key+"\" data-tripid=\""+trip_key+"\"><tbody class=\"trip service_color_"+by_trip[trip_key].arrivals[0].app_color+" route_"+by_trip[trip_key].arrivals[0].route_id+" direction_"+by_trip[trip_key].arrivals[0].route_data.direction_id+" agency_"+by_trip[trip_key].arrivals[0].agency+"\">\n";
 		by_trip_html += trip_inner+"</tbody></table>";
 		
 		trip_objects[trip_key] = by_trip_html;
