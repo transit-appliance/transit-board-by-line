@@ -731,8 +731,8 @@ transitBoardByLine.displayPage = function(data, callback) {
 			by_trip[trip_identifier].stop_id = filtered_queue[i].stop_id;
 			by_trip[trip_identifier].first_arrival_time = filtered_queue[i].arrivalTime;
 			var service_class = filtered_queue[i].route_data.service_class;
-			if (service_class > 4) {
-				service_class = 5;
+			if (service_class > 6) {
+				service_class = 6;
 			}
 			var direction_multiplier = 0;
 			if (transitBoardByLine.split_by_direction) {
@@ -775,7 +775,6 @@ transitBoardByLine.displayPage = function(data, callback) {
 		trip_inner += '<td class="destination" valign="middle"><div>'+by_trip[trip_key].arrivals[0].app_headsign_less_route+" from "+by_trip[trip_key].arrivals[0].stop_data.stop_name.replace(" MAX Station","").replace(" MAX Stn","")+"</div></td>\n";
 		trip_inner += "<td class=\"arrivals\">"+trip_arrival+"</td></tr>";
 		
-
 		var by_trip_html = "<table class=\""+trip_key+" trip_wrapper active bank_placeholder\" data-bank=\"bank_placeholder\" data-sortkey=\""+by_trip[trip_key].sort_key+"\" data-tripid=\""+trip_key+"\"><tbody class=\"trip service_color_"+by_trip[trip_key].arrivals[0].app_color+" route_"+by_trip[trip_key].arrivals[0].route_id+" direction_"+by_trip[trip_key].arrivals[0].route_data.direction_id+" agency_"+by_trip[trip_key].arrivals[0].agency+"\">\n";
 		by_trip_html += trip_inner+"</tbody></table>";
 		
