@@ -731,8 +731,8 @@ transitBoardByLine.displayPage = function(data, callback) {
 			by_trip[trip_identifier].stop_id = filtered_queue[i].stop_id;
 			by_trip[trip_identifier].first_arrival_time = filtered_queue[i].arrivalTime;
 			var service_class = filtered_queue[i].route_data.service_class;
-			if (service_class > 6) {
-				service_class = 6;
+			if (service_class > 7) {
+				service_class = 7;
 			}
 			var direction_multiplier = 0;
 			if (transitBoardByLine.split_by_direction) {
