@@ -434,25 +434,28 @@ transitBoardByLine.initializePage = function(data) {
 		</style>\
 	'));	
 		
-	// minimize width of route and arrival elements
-	var route_cell_width = jQuery("#trip1 td.route").width();
-	var route_text_width = jQuery("#trip1 td.route span").width();
-	var arrivals_text_width = jQuery("#trip1 td.arrivals span").width();
-	var destination_text_width = jQuery("#trip1 td.destination span").width();
-	//alert(route_cell_width+" "+route_text_width);
-	
-	transitBoardByLine.target_width = Math.floor(jQuery("#tb_middle").width()/transitBoardByLine.columns);
-	
-	jQuery("head").append(jQuery('\
-		<style>\
-		table.trip_wrapper { width: '+transitBoardByLine.target_width+'px; }\
-			table.trip_wrapper tbody tr td.route { min-width: '+route_text_width+'px !important; }\
-			table.trip_wrapper tbody tr td.arrivals { min-width: '+arrivals_text_width+'px !important; }\
-			table.trip_wrapper tbody tr td.destination { width: 100% }\
-		</style>\
-	'));
+
 
 	setTimeout( function() {
+		
+		// minimize width of route and arrival elements
+		var route_cell_width = jQuery("#trip1 td.route").width();
+		var route_text_width = jQuery("#trip1 td.route span").width();
+		var arrivals_text_width = jQuery("#trip1 td.arrivals span").width();
+		var destination_text_width = jQuery("#trip1 td.destination span").width();
+		//alert(route_cell_width+" "+route_text_width);
+		
+		transitBoardByLine.target_width = Math.floor(jQuery("#tb_middle").width()/transitBoardByLine.columns);
+		
+		jQuery("head").append(jQuery('\
+			<style>\
+			table.trip_wrapper { width: '+transitBoardByLine.target_width+'px; }\
+				table.trip_wrapper tbody tr td.route { min-width: '+route_text_width+'px !important; }\
+				table.trip_wrapper tbody tr td.arrivals { min-width: '+arrivals_text_width+'px !important; }\
+				table.trip_wrapper tbody tr td.destination { width: 100% }\
+			</style>\
+		'));
+	
 		transitBoardByLine.target_width = Math.floor(jQuery("#tb_middle").width()/transitBoardByLine.columns);
 		var actual_width = jQuery("tbody.trip").outerWidth(true);
 			
