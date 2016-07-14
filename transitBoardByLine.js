@@ -1,5 +1,5 @@
 /*
-   Copyright 2010-2013 Portland Transport
+   Copyright 2010-2016 Portland Transport
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,16 +14,19 @@
    limitations under the License.
 */
 
+console.log("top of application");
+
 var transitBoardByLine = {}; // keep state
 
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.18";
+transitBoardByLine.APP_VERSION 	= "2.19";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // v2.17 - upgrade jQuery to 1.11.0
 // v2.18 - add classes to enable PCC styling
+// v2.19 - add GBFS
 
 // assess environment
 
@@ -49,8 +52,11 @@ transitBoardByLine.dependencies = [
 		"../assets/js/trArr.js",
 		"../assets/js/libraries/jquery.isotope.js",
 		"../assets/js/trCar2Go.js",
+		"../assets/js/trGBFS.js",
 		"../assets/js/trWeather.js"
 ];
+
+console.log("about to load dependencies");
 
 
 /*
@@ -95,6 +101,7 @@ transitBoardByLine.animation_factor = 0.85; // arbitrary value to allow for paus
 transitBoardByLine.messages = [];
 transitBoardByLine.start_time = new Date();
 transitBoardByLine.car2go = 0;
+transitBoardByLine.gbfs = 0;
 transitBoardByLine.weather = false;
 transitBoardByLine.suppress_scrolling = false;
 transitBoardByLine.alerts = false;
@@ -208,6 +215,24 @@ transitBoardByLine.initializePage = function(data) {
 						loc: 'portland',
 						consumer_key: 'TransitAppliance',
 						num_vehicles: transitBoardByLine.car2go
+					});
+				}
+			}
+		}
+	}
+	
+	// initialize GBFS object if needed
+	
+	if (data.optionsConfig != undefined && data.optionsConfig.lat != undefined && data.optionsConfig.lat[0] != undefined) {
+		if (data.optionsConfig.lng != undefined && data.optionsConfig.lng[0] != undefined) {
+			if (data.optionsConfig.gbfs != undefined && data.optionsConfig.gbfs[0] != undefined) {
+				transitBoardByLine.gbfs = data.optionsConfig.gbfs[0];
+				if (transitBoardByLine.gbfs != 0 ) {
+					transitBoardByLine.bikes = new trGBFS({
+						lat: data.optionsConfig.lat[0],
+						lng: data.optionsConfig.lng[0],
+						loc: 'http://boise.greenbike.com/opendata/gbfs.json',
+						num_locations: transitBoardByLine.gbfs
 					});
 				}
 			}
@@ -788,7 +813,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 		
 	// now do spacers to get balanced columns
 	
-	var display_elements = sorted_trip_keys.length + parseInt(transitBoardByLine.car2go);
+	var display_elements = sorted_trip_keys.length + parseInt(transitBoardByLine.car2go) + parseInt(transitBoardByLine.gbfs);
 	if (transitBoardByLine.weather) {
 		display_elements = display_elements + 1;
 	}
@@ -830,6 +855,9 @@ transitBoardByLine.displayPage = function(data, callback) {
 				if (trip_id.match(/car2go/)) {
 					// make sure all car2go elements are same font size
 					jQuery(".car2go td.destination div").css('font-size',size+"px");
+				} else if (trip_id.match(/gbfs/)) {
+					// make sure all GBFS elements are same font size
+					jQuery(".gbfs td.destination div").css('font-size',size+"px");
 				} else {
 					trip.css('font-size',size+"px");
 				}
@@ -872,7 +900,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 	// see if we need to delete any elements
 	jQuery("table.trip_wrapper.active").each(function(index,element){
 		var id = jQuery(element).attr("data-tripid");
-		if ( trip_objects[id] == null && !id.match(/car2go/)  && !id.match(/weather/) ) {
+		if ( trip_objects[id] == null && !id.match(/car2go/) && !id.match(/gbfs/)  && !id.match(/weather/) ) {
 			jQuery("table."+id).removeClass('active');
 			removal_queue.push(id);
 		}
@@ -936,6 +964,49 @@ transitBoardByLine.displayPage = function(data, callback) {
 						}
 					}
 					jQuery('.car2go'+i+' .arrivals').html(dist.toFixed(1)+' mi');
+				}
+			}
+		}
+	}
+	
+	// create/update GBFS tables
+	if (transitBoardByLine.gbfs > 0) {
+		var locations = transitBoardByLine.bikes.get_locations();
+		//console.table(locations);
+		
+		for (i=0; i<transitBoardByLine.gbfs; i++) {
+			if ( typeof locations[i] !== 'undefined') {
+
+				var value = locations[i];
+
+
+				if (jQuery(".gbfs"+i).length == 0) {
+					var car = '\
+							<table class="gbfs gbfs'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="80000" data-bank="bank_placeholder" data-tripid="gbfs'+i+'">\
+								<tbody class="trip service_color_gbfs">\
+									<tr valign="middle">\
+										<td class="route"><img src="../assets/images/gbfs/gbfs_vehicle.jpg"></td>\
+										<td class="destination"><div>BIKETOWN - '+value.name+' ('+value.formatted_distance+')</div></td>\
+										<td class="arrivals">'+value.num_bikes_available+' <span style="font-size: 80%">bikes</span></td>\
+									</tr>\
+								</tbody>\
+							</table>\
+					';
+					jQuery.each(transitBoardByLine.banks,function(index,bank) {
+						var car_string = car.replace(/bank_placeholder/g,bank);
+						transitBoardByLine.isotope_container.isotope( 'insert', jQuery(car_string) );
+					});
+					
+				} else {
+					jQuery('.gbfs'+i+' .destination div').html("BIKETOWN - "+value.name+' ('+value.formatted_distance+')');
+					var trip = jQuery('.gbfs'+i+' .destination div');
+					if (trip.length > 0) {
+						if (trip[0].scrollHeight > trip[0].clientHeight) {
+							var gbfs_class = 'gbfs'+i;
+							setTimeout(function(){transitBoardByLine.shrink_destination(gbfs_class)}, 2000);
+						}
+					}
+					jQuery('.gbfs'+i+' .arrivals').html(value.num_bikes_available+' <span style="font-size: 80%">bikes</span>');
 				}
 			}
 		}
@@ -1046,6 +1117,8 @@ head.ready(function() {
 	if (transitBoardByLine.is_development) {
 		handler_url = "http://transitappliance.com/cgi-bin/js_error_dev.pl";
 	}
+	
+	console.log("initialize tracekit");
 		
 	TraceKit.report.subscribe(function (stackInfo) {   
 		var serialized_stack = JSON.stringify(stackInfo);

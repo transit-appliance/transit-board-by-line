@@ -297,13 +297,35 @@ table.trip_wrapper tbody.service_color_car2go td.destination,
 table.trip_wrapper tbody.service_color_car2go td.destination div,
 div.trip.service_color_car2go div.route_wrapper, 
 div.trip.service_color_car2go div.destination_wrapper {
-	border-color: #009BE0;;
+	border-color: #009BE0;
 }
 
 table.trip_wrapper tbody.service_color_car2go td.arrivals {
 	color: black;
 	background-color: white;
   border-color: #009BE0;
+}
+
+table.trip_wrapper tbody.service_color_gbfs td.route,
+table.trip_wrapper tbody.service_color_gbfs td.destination,
+table.trip_wrapper tbody.service_color_gbfs td.destination div,
+div.trip.service_color_gbfs div.route_wrapper, 
+div.trip.service_color_gbfs div.destination_wrapper {
+	border-color: #FC4C02;
+}
+
+table.trip_wrapper tbody.service_color_gbfs td.route {
+	background-color: #343434;
+}
+
+table.trip_wrapper tbody.service_color_gbfs td.route img {
+	height: 1.3em;
+}
+
+table.trip_wrapper tbody.service_color_gbfs td.arrivals {
+	color: black;
+	background-color: white;
+  border-color: #FC4C02;
 }
 
 table.trip_wrapper tbody.service_color_weather td.route,
