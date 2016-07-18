@@ -14,8 +14,6 @@
    limitations under the License.
 */
 
-console.log("top of application");
-
 var transitBoardByLine = {}; // keep state
 
 // constants
@@ -56,14 +54,6 @@ transitBoardByLine.dependencies = [
 		"../assets/js/trWeather.js"
 ];
 
-console.log("about to load dependencies");
-
-
-/*
-if (!transitBoardByLine.is_development) {
-	transitBoardByLine.dependencies.push("../assets/js/tracekit.js");
-}
-*/
 
 (function () {
 
@@ -231,7 +221,7 @@ transitBoardByLine.initializePage = function(data) {
 					transitBoardByLine.bikes = new trGBFS({
 						lat: data.optionsConfig.lat[0],
 						lng: data.optionsConfig.lng[0],
-						loc: 'http://boise.greenbike.com/opendata/gbfs.json',
+						loc: 'http://biketownpdx.socialbicycles.com/opendata/gbfs.json',
 						num_locations: transitBoardByLine.gbfs
 					});
 				}
@@ -1010,6 +1000,18 @@ transitBoardByLine.displayPage = function(data, callback) {
 				}
 			}
 		}
+		
+		if (locations.length == 0) {
+			// no bikes, kill off the display elements
+			jQuery("table.trip_wrapper.active").each(function(index,element){
+				var id = jQuery(element).attr("data-tripid");
+				if ( trip_objects[id] == null && id.match(/gbfs/) ) {
+					jQuery("table."+id).removeClass('active');
+					removal_queue.push(id);
+				}
+			});
+		}
+		
 	}
 	
 	if (transitBoardByLine.weather) {
@@ -1118,7 +1120,7 @@ head.ready(function() {
 		handler_url = "http://transitappliance.com/cgi-bin/js_error_dev.pl";
 	}
 	
-	console.log("initialize tracekit");
+	//console.log("initialize tracekit");
 		
 	TraceKit.report.subscribe(function (stackInfo) {   
 		var serialized_stack = JSON.stringify(stackInfo);
