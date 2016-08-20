@@ -315,7 +315,7 @@ div.trip.service_color_gbfs div.destination_wrapper {
 }
 
 table.trip_wrapper tbody.service_color_gbfs td.route {
-	background-color: #343434;
+	/*background-color: #343434;*/
 }
 
 table.trip_wrapper tbody.service_color_gbfs td.route img {

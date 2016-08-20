@@ -910,6 +910,60 @@ transitBoardByLine.displayPage = function(data, callback) {
 		}
 	}
 	
+	// create/update GBFS tables
+	if (transitBoardByLine.gbfs > 0) {
+		var locations = transitBoardByLine.bikes.get_locations();
+		//console.table(locations);
+		
+		for (i=0; i<transitBoardByLine.gbfs; i++) {
+			if ( typeof locations[i] !== 'undefined') {
+
+				var value = locations[i];
+
+
+				if (jQuery(".gbfs"+i).length == 0) {
+					var car = '\
+							<table class="gbfs gbfs'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="80000" data-bank="bank_placeholder" data-tripid="gbfs'+i+'">\
+								<tbody class="trip service_color_gbfs">\
+									<tr valign="middle">\
+										<td class="route"><img src="../assets/images/gbfs/gbfs_vehicle.jpg"></td>\
+										<td class="destination"><div>BIKETOWN - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')</div></td>\
+										<td class="arrivals">'+value.num_bikes_available+' <span style="font-size: 80%">bikes</span></td>\
+									</tr>\
+								</tbody>\
+							</table>\
+					';
+					jQuery.each(transitBoardByLine.banks,function(index,bank) {
+						var car_string = car.replace(/bank_placeholder/g,bank);
+						transitBoardByLine.isotope_container.isotope( 'insert', jQuery(car_string) );
+					});
+					
+				} else {
+					jQuery('.gbfs'+i+' .destination div').html('BIKETOWN - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')');
+					var trip = jQuery('.gbfs'+i+' .destination div');
+					if (trip.length > 0) {
+						if (trip[0].scrollHeight > trip[0].clientHeight) {
+							var gbfs_class = 'gbfs'+i;
+							setTimeout(function(){transitBoardByLine.shrink_destination(gbfs_class)}, 2000);
+						}
+					}
+					jQuery('.gbfs'+i+' .arrivals').html(value.num_bikes_available+' <span style="font-size: 80%">bikes</span>');
+				}
+			}
+		}
+		
+		if (locations.length == 0) {
+			// no bikes, kill off the display elements
+			jQuery("table.trip_wrapper.active").each(function(index,element){
+				var id = jQuery(element).attr("data-tripid");
+				if ( trip_objects[id] == null && id.match(/gbfs/) ) {
+					jQuery("table."+id).removeClass('active');
+					removal_queue.push(id);
+				}
+			});
+		}
+		
+	}	
 	
 	
 	// create/update car2go tables
@@ -959,60 +1013,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 		}
 	}
 	
-	// create/update GBFS tables
-	if (transitBoardByLine.gbfs > 0) {
-		var locations = transitBoardByLine.bikes.get_locations();
-		//console.table(locations);
-		
-		for (i=0; i<transitBoardByLine.gbfs; i++) {
-			if ( typeof locations[i] !== 'undefined') {
 
-				var value = locations[i];
-
-
-				if (jQuery(".gbfs"+i).length == 0) {
-					var car = '\
-							<table class="gbfs gbfs'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="80000" data-bank="bank_placeholder" data-tripid="gbfs'+i+'">\
-								<tbody class="trip service_color_gbfs">\
-									<tr valign="middle">\
-										<td class="route"><img src="../assets/images/gbfs/gbfs_vehicle.jpg"></td>\
-										<td class="destination"><div>BIKETOWN - '+value.name+' ('+value.formatted_distance+')</div></td>\
-										<td class="arrivals">'+value.num_bikes_available+' <span style="font-size: 80%">bikes</span></td>\
-									</tr>\
-								</tbody>\
-							</table>\
-					';
-					jQuery.each(transitBoardByLine.banks,function(index,bank) {
-						var car_string = car.replace(/bank_placeholder/g,bank);
-						transitBoardByLine.isotope_container.isotope( 'insert', jQuery(car_string) );
-					});
-					
-				} else {
-					jQuery('.gbfs'+i+' .destination div').html("BIKETOWN - "+value.name+' ('+value.formatted_distance+')');
-					var trip = jQuery('.gbfs'+i+' .destination div');
-					if (trip.length > 0) {
-						if (trip[0].scrollHeight > trip[0].clientHeight) {
-							var gbfs_class = 'gbfs'+i;
-							setTimeout(function(){transitBoardByLine.shrink_destination(gbfs_class)}, 2000);
-						}
-					}
-					jQuery('.gbfs'+i+' .arrivals').html(value.num_bikes_available+' <span style="font-size: 80%">bikes</span>');
-				}
-			}
-		}
-		
-		if (locations.length == 0) {
-			// no bikes, kill off the display elements
-			jQuery("table.trip_wrapper.active").each(function(index,element){
-				var id = jQuery(element).attr("data-tripid");
-				if ( trip_objects[id] == null && id.match(/gbfs/) ) {
-					jQuery("table."+id).removeClass('active');
-					removal_queue.push(id);
-				}
-			});
-		}
-		
-	}
 	
 	if (transitBoardByLine.weather) {
 		if (transitBoardByLine.forecast.weather_is_current()) {
@@ -1126,6 +1127,28 @@ head.ready(function() {
 		var serialized_stack = JSON.stringify(stackInfo);
 		if (serialized_stack.match(/tracekit/)) {
 			// don't track self-referential tracekit errors
+		} else if (serialized_stack.match(/Timezone/i)){
+			jQuery.ajax({
+			    url: handler_url,
+			    type: 'POST',
+			    data: {
+					  	applicationName: 			transitBoardByLine.APP_NAME,
+					  	applicationVersion: 	transitBoardByLine.APP_VERSION,
+					  	applicationId: 				transitBoardByLine.APP_ID,
+					  	applianceId:					transitBoardByLine.appliance_id || "Unassigned",
+			        browserUrl: 					window.location.href,
+			        codeFile:							stackInfo.url,
+			        message:							"TZ1: Timezone error, restarting application: "+stackInfo.message,
+			        userAgent: 						navigator.userAgent,
+			        stackInfo: 						serialized_stack
+			    }
+			});
+			
+			setTimeout(function(){
+				// restart app
+				location.reload(true);
+			},2000);
+			
 		} else {
 			jQuery.ajax({
 			    url: handler_url,
