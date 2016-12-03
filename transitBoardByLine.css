@@ -140,7 +140,7 @@ table.trip_wrapper tbody tr td.destination {
 
 table.trip_wrapper tbody tr td.destination div {
 	padding: 0;
-
+	font-weight: 600;
 	overflow: hidden;
 	max-height: 2.8em;
 }
@@ -234,8 +234,8 @@ table.trip_wrapper tbody.service_color_6 td.destination,
 table.trip_wrapper tbody.service_color_6 td.destination div,
 div.trip.service_color_6 div.route_wrapper, 
 div.trip.service_color_6 div.destination_wrapper {
-	background-color: #cccccc;
-	border-color: #cccccc;
+	background-color: #dddddd;
+	border-color: #dddddd;
 }
 
 table.trip_wrapper tbody.service_color_7 td.route,
