@@ -1114,61 +1114,89 @@ function filter_queue(arrivalsQueue) {
 
 head.ready(function() {
 	
-	// set up error handler if not on development site
+	// early parsing of query string
 	
-	var handler_url = "http://transitappliance.com/cgi-bin/js_error.pl";
-	if (transitBoardByLine.is_development) {
-		handler_url = "http://transitappliance.com/cgi-bin/js_error_dev.pl";
+	function getQueryVariable(variable) {
+    var query = window.location.search.substring(1);
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1]);
+        }
+    }
+    return "";
 	}
 	
-	//console.log("initialize tracekit");
-		
-	TraceKit.report.subscribe(function (stackInfo) {   
-		var serialized_stack = JSON.stringify(stackInfo);
-		if (serialized_stack.match(/tracekit/)) {
-			// don't track self-referential tracekit errors
-		} else if (stackInfo.message.match(/Timezone/i) || serialized_stack.match(/Timezone/i)){
-			jQuery.ajax({
-			    url: handler_url,
-			    type: 'POST',
-			    data: {
-					  	applicationName: 			transitBoardByLine.APP_NAME,
-					  	applicationVersion: 	transitBoardByLine.APP_VERSION,
-					  	applicationId: 				transitBoardByLine.APP_ID,
-					  	applianceId:					transitBoardByLine.appliance_id || "Unassigned",
-			        browserUrl: 					window.location.href,
-			        codeFile:							stackInfo.url,
-			        message:							"TZ1: Timezone error, restarting application: "+stackInfo.message,
-			        userAgent: 						navigator.userAgent,
-			        stackInfo: 						serialized_stack
-			    }
-			});
-			
-			setTimeout(function(){
-				// restart app
-				location.reload(true);
-			},2000);
-			
-		} else {
-			jQuery.ajax({
-			    url: handler_url,
-			    type: 'POST',
-			    data: {
-					  	applicationName: 			transitBoardByLine.APP_NAME,
-					  	applicationVersion: 	transitBoardByLine.APP_VERSION,
-					  	applicationId: 				transitBoardByLine.APP_ID,
-					  	applianceId:					transitBoardByLine.appliance_id || "Unassigned",
-			        browserUrl: 					window.location.href,
-			        codeFile:							stackInfo.url,
-			        message:							stackInfo.message,
-			        userAgent: 						navigator.userAgent,
-			        stackInfo: 						serialized_stack
-			    }
-			});
-		}
-	});
+	var bugsnag = getQueryVariable("option[bugsnag]") == true;
+	console.log("bugsnag: "+bugsnag);
 	
-	// throw new Error("Startup Event");
+	// set up error handler if not on development site
+	
+	if (!bugsnag) {
+		var handler_url = "http://transitappliance.com/cgi-bin/js_error.pl";
+		if (transitBoardByLine.is_development) {
+			handler_url = "http://transitappliance.com/cgi-bin/js_error_dev.pl";
+		}
+		
+		//console.log("initialize tracekit");
+			
+		TraceKit.report.subscribe(function (stackInfo) {   
+			var serialized_stack = JSON.stringify(stackInfo);
+			if (serialized_stack.match(/tracekit/)) {
+				// don't track self-referential tracekit errors
+			} else if (stackInfo.message.match(/Timezone/i) || serialized_stack.match(/Timezone/i)){
+				jQuery.ajax({
+				    url: handler_url,
+				    type: 'POST',
+				    data: {
+						  	applicationName: 			transitBoardByLine.APP_NAME,
+						  	applicationVersion: 	transitBoardByLine.APP_VERSION,
+						  	applicationId: 				transitBoardByLine.APP_ID,
+						  	applianceId:					transitBoardByLine.appliance_id || "Unassigned",
+				        browserUrl: 					window.location.href,
+				        codeFile:							stackInfo.url,
+				        message:							"TZ1: Timezone error, restarting application: "+stackInfo.message,
+				        userAgent: 						navigator.userAgent,
+				        stackInfo: 						serialized_stack
+				    }
+				});
+				
+				setTimeout(function(){
+					// restart app
+					location.reload(true);
+				},2000);
+				
+			} else {
+				jQuery.ajax({
+				    url: handler_url,
+				    type: 'POST',
+				    data: {
+						  	applicationName: 			transitBoardByLine.APP_NAME,
+						  	applicationVersion: 	transitBoardByLine.APP_VERSION,
+						  	applicationId: 				transitBoardByLine.APP_ID,
+						  	applianceId:					transitBoardByLine.appliance_id || "Unassigned",
+				        browserUrl: 					window.location.href,
+				        codeFile:							stackInfo.url,
+				        message:							stackInfo.message,
+				        userAgent: 						navigator.userAgent,
+				        stackInfo: 						serialized_stack
+				    }
+				});
+			}
+		});
+		
+		// throw new Error("Startup Event");
+	}
+	
+	if (bugsnag) {
+		var s = document.createElement("script");
+		s.type = "text/javascript";
+		s.src = "//d2wy8f7a9ursnm.cloudfront.net/bugsnag-3.min.js";
+		s.setAttribute("data-apikey", "e2c233a964c42f28c66aedde079503e8");
+		$("head").append(s);
+		console.log("appended bugsnag");
+	}
 	
 	
   trArr({
