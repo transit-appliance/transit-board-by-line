@@ -1145,7 +1145,7 @@ head.ready(function() {
 			var serialized_stack = JSON.stringify(stackInfo);
 			if (serialized_stack.match(/tracekit/)) {
 				// don't track self-referential tracekit errors
-			} else if (stackInfo.message.match(/Timezone/i) || serialized_stack.match(/Timezone/i)){
+			} else if (stackInfo.message.search(/Timezone/i) > -1) {
 				jQuery.ajax({
 				    url: handler_url,
 				    type: 'POST',
