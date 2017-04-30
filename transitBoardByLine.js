@@ -707,6 +707,14 @@ transitBoardByLine.displayPage = function(data, callback) {
 			filtered_queue[i].app_route_id = "B";
 			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("Portland Streetcar","");		
 			filtered_queue[i].app_color = 'streetcar'
+		} else if (filtered_queue[i].route_id == "196") {
+			filtered_queue[i].app_route_id = "S";
+			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("Portland Streetcar","");		
+			filtered_queue[i].app_color = 'streetcar'
+		} else if (filtered_queue[i].route_id == "293") {
+			filtered_queue[i].app_route_id = "SH";
+			filtered_queue[i].app_headsign_less_route = "<b>Streetcar</b> "+filtered_queue[i].headsign.replace("Portland Streetcar","");		
+			filtered_queue[i].app_color = 'streetcar'
 		} else {		
 			var route_name = filtered_queue[i].route_data.route_short_name || filtered_queue[i].route_data.route_long_name;
 			filtered_queue[i].app_route_id = route_name;
