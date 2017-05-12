@@ -97,6 +97,8 @@ transitBoardByLine.suppress_scrolling = false;
 transitBoardByLine.alerts = false;
 transitBoardByLine.suppress_downtown_only = false;
 
+transitBoardByLine.platform = "";
+
 transitBoardByLine.isotope_container = null;
 
 transitBoardByLine.standing_messages.push("<span>TransitBoard&trade; is a product of Portland Transport.</span>");
@@ -150,7 +152,7 @@ transitBoardByLine.resetMessageQueue = function() {
 	if (transitBoardByLine.is_development) {
 		is_dev = "D ";
 	}
-  transitBoardByLine.messages.push("<span style=\"font-size: 60%\">["+is_dev+transitBoardByLine.start_time_formatted+" "+transitBoardByLine.appliance_id+" "+dimensions+" "+transitBoardByLine.animation_factor+"]</span>");
+  transitBoardByLine.messages.push("<span style=\"font-size: 60%\">["+is_dev+transitBoardByLine.start_time_formatted+" "+transitBoardByLine.appliance_id+" "+dimensions+" "+transitBoardByLine.animation_factor+" "+transitBoardByLine.platform+"]</span>");
 }
 
 transitBoardByLine.advanceMessage = function() {
@@ -190,6 +192,10 @@ transitBoardByLine.initializePage = function(data) {
 		transitBoardByLine.appliance_id = data.applianceConfig.id[0];
 	} else {
 		transitBoardByLine.appliance_id = "Unassigned";
+	}
+	
+	if (data.optionsConfig.platform != undefined && data.optionsConfig.platform[0] != undefined) {
+		transitBoardByLine.platform = data.optionsConfig.platform[0];
 	}
 	
 	// initialize car2go object if needed
@@ -1137,7 +1143,8 @@ head.ready(function() {
 	}
 	
 	var bugsnag = getQueryVariable("option[bugsnag]") == true;
-	console.log("bugsnag: "+bugsnag);
+	bugsnag = false;
+	//console.log("bugsnag: "+bugsnag);
 	
 	// set up error handler if not on development site
 	
