@@ -228,7 +228,8 @@ transitBoardByLine.initializePage = function(data) {
 						lat: data.optionsConfig.lat[0],
 						lng: data.optionsConfig.lng[0],
 						loc: 'http://biketownpdx.socialbicycles.com/opendata/gbfs.json',
-						num_locations: transitBoardByLine.gbfs
+						num_locations: transitBoardByLine.gbfs,
+						include_free_bikes: data.optionsConfig.include_free_bikes[0]
 					});
 				}
 			}
@@ -933,16 +934,24 @@ transitBoardByLine.displayPage = function(data, callback) {
 			if ( typeof locations[i] !== 'undefined') {
 
 				var value = locations[i];
-
+			  var bikes = "bikes";
+			  if (value.num_bikes_available == 1) {
+			    bikes = "bike";
+			  }
+			  var station = "BIKETOWN";
+			  if (value.location_type == "station") {
+			    station = "BIKETOWN Station";
+			  }
 
 				if (jQuery(".gbfs"+i).length == 0) {
+
 					var car = '\
 							<table class="gbfs gbfs'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="80000" data-bank="bank_placeholder" data-tripid="gbfs'+i+'">\
 								<tbody class="trip service_color_gbfs">\
 									<tr valign="middle">\
 										<td class="route"><img src="../assets/images/gbfs/gbfs_vehicle.jpg"></td>\
-										<td class="destination"><div>BIKETOWN - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')</div></td>\
-										<td class="arrivals">'+value.num_bikes_available+' <span style="font-size: 80%">bikes</span></td>\
+										<td class="destination"><div>'+station+' - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')</div></td>\
+										<td class="arrivals">'+value.num_bikes_available+' <span style="font-size: 80%">'+bikes+'</span></td>\
 									</tr>\
 								</tbody>\
 							</table>\
@@ -953,7 +962,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 					});
 					
 				} else {
-					jQuery('.gbfs'+i+' .destination div').html('BIKETOWN - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')');
+					jQuery('.gbfs'+i+' .destination div').html(station+' - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')');
 					var trip = jQuery('.gbfs'+i+' .destination div');
 					if (trip.length > 0) {
 						if (trip[0].scrollHeight > trip[0].clientHeight) {
@@ -961,7 +970,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 							setTimeout(function(){transitBoardByLine.shrink_destination(gbfs_class)}, 2000);
 						}
 					}
-					jQuery('.gbfs'+i+' .arrivals').html(value.num_bikes_available+' <span style="font-size: 80%">bikes</span>');
+					jQuery('.gbfs'+i+' .arrivals').html(value.num_bikes_available+' <span style="font-size: 80%">'+bikes+'</span>');
 				}
 			}
 		}
