@@ -223,13 +223,17 @@ transitBoardByLine.initializePage = function(data) {
 		if (data.optionsConfig.lng != undefined && data.optionsConfig.lng[0] != undefined) {
 			if (data.optionsConfig.gbfs != undefined && data.optionsConfig.gbfs[0] != undefined) {
 				transitBoardByLine.gbfs = data.optionsConfig.gbfs[0];
+				var free_bikes = 0;
+				if (data.optionsConfig.include_free_bikes != undefined && data.optionsConfig.include_free_bikes[0] != undefined) {
+				  free_bikes = data.optionsConfig.include_free_bikes[0];
+				}
 				if (transitBoardByLine.gbfs != 0 ) {
 					transitBoardByLine.bikes = new trGBFS({
 						lat: data.optionsConfig.lat[0],
 						lng: data.optionsConfig.lng[0],
 						loc: 'http://biketownpdx.socialbicycles.com/opendata/gbfs.json',
 						num_locations: transitBoardByLine.gbfs,
-						include_free_bikes: data.optionsConfig.include_free_bikes[0]
+						include_free_bikes: free_bikes
 					});
 				}
 			}
