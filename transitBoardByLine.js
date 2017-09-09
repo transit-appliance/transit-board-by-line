@@ -942,9 +942,9 @@ transitBoardByLine.displayPage = function(data, callback) {
 			  if (value.num_bikes_available == 1) {
 			    bikes = "bike";
 			  }
-			  var station = "BIKETOWN";
+			  var station = "BIKETOWN bike";
 			  if (value.location_type == "station") {
-			    station = "BIKETOWN Station";
+			    station = '<span class="terminus">'+value.num_bikes_available+" "+bikes+"</span> at BIKETOWN Station";
 			  }
 
 				if (jQuery(".gbfs"+i).length == 0) {
@@ -954,8 +954,8 @@ transitBoardByLine.displayPage = function(data, callback) {
 								<tbody class="trip service_color_gbfs">\
 									<tr valign="middle">\
 										<td class="route"><img src="../assets/images/gbfs/gbfs_vehicle.jpg"></td>\
-										<td class="destination"><div>'+station+' - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')</div></td>\
-										<td class="arrivals">'+value.num_bikes_available+' <span style="font-size: 80%">'+bikes+'</span></td>\
+										<td class="destination"><div>'+station+' - <span class="terminus">'+value.name+'</span></div></td>\
+										<td class="arrivals">'+value.formatted_distance+'</td>\
 									</tr>\
 								</tbody>\
 							</table>\
@@ -966,7 +966,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 					});
 					
 				} else {
-					jQuery('.gbfs'+i+' .destination div').html(station+' - <span class="terminus">'+value.name+'</span> ('+value.formatted_distance+')');
+					jQuery('.gbfs'+i+' .destination div').html(station+' - <span class="terminus">'+value.name+'</span>');
 					var trip = jQuery('.gbfs'+i+' .destination div');
 					if (trip.length > 0) {
 						if (trip[0].scrollHeight > trip[0].clientHeight) {
@@ -974,7 +974,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 							setTimeout(function(){transitBoardByLine.shrink_destination(gbfs_class)}, 2000);
 						}
 					}
-					jQuery('.gbfs'+i+' .arrivals').html(value.num_bikes_available+' <span style="font-size: 80%">'+bikes+'</span>');
+					jQuery('.gbfs'+i+' .arrivals').html(value.formatted_distance);
 				}
 			}
 		}
