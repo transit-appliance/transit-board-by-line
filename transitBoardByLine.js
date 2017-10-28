@@ -19,13 +19,12 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.20";
+transitBoardByLine.APP_VERSION 	= "2.19";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // v2.17 - upgrade jQuery to 1.11.0
 // v2.18 - add classes to enable PCC styling
 // v2.19 - add GBFS
-// v2.20 - tweaks for more robust car2go
 
 // assess environment
 
@@ -902,9 +901,6 @@ transitBoardByLine.displayPage = function(data, callback) {
 			transitBoardByLine.isotope_container.isotope( 'remove', jQuery("table."+id) );
 			process_removals();
 		} else {
-		  // kill any items hidden by isotope
-		  jQuery(".isotope-hidden").remove();
-		  // now process the insertions
 			process_insertions();
 		}
 	}
@@ -1000,18 +996,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 	// create/update car2go tables
 	if (transitBoardByLine.car2go > 0) {
 		var vehicles = transitBoardByLine.cars.get_vehicles();
-
-		if (vehicles.length == 0) {
-		  console.log("no c2g vehicles");
-			jQuery("table.trip_wrapper.active").each(function(index,element){
-				var id = jQuery(element).attr("data-tripid");
-				if ( trip_objects[id] == null && id.match(/car2go/) ) {
-					jQuery("table."+id).removeClass('active');
-					removal_queue.push(id);
-				}
-			});
-		}
-		for (i=0; i<vehicles.length; i++) {
+		for (i=0; i<transitBoardByLine.car2go; i++) {
 			if ( typeof vehicles[i] !== 'undefined') {
 				var value = vehicles[i];
 				var dist = value[1];
@@ -1053,8 +1038,6 @@ transitBoardByLine.displayPage = function(data, callback) {
 				}
 			}
 		}
-		
-
 	}
 	
 
