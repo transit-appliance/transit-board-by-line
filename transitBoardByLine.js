@@ -19,12 +19,13 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.19";
+transitBoardByLine.APP_VERSION 	= "2.21";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // v2.17 - upgrade jQuery to 1.11.0
 // v2.18 - add classes to enable PCC styling
 // v2.19 - add GBFS
+// v2.21 - add smarter re-add of car2go elements
 
 // assess environment
 
@@ -1008,7 +1009,7 @@ transitBoardByLine.displayPage = function(data, callback) {
 				if (address.indexOf("/span") == -1) {
 					address = address + "</span>";
 				}
-				if (jQuery(".car2go"+i).length == 0) {
+				if (jQuery(".active.car2go"+i).length == 0) {
 					var car = '\
 							<table class="car2go car2go'+i+' trip_wrapper active isotope-item bank_placeholder" data-sortkey="80000" data-bank="bank_placeholder" data-tripid="car2go'+i+'">\
 								<tbody class="trip service_color_car2go">\
