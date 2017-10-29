@@ -19,13 +19,14 @@ var transitBoardByLine = {}; // keep state
 // constants
 
 transitBoardByLine.APP_NAME 		= "Transit Board by Line";
-transitBoardByLine.APP_VERSION 	= "2.21";
+transitBoardByLine.APP_VERSION 	= "2.22";
 transitBoardByLine.APP_ID 			= "tbdbyline";
 
 // v2.17 - upgrade jQuery to 1.11.0
 // v2.18 - add classes to enable PCC styling
 // v2.19 - add GBFS
 // v2.21 - add smarter re-add of car2go elements
+// v2.22 - even more car2go intelligence
 
 // assess environment
 
@@ -996,8 +997,21 @@ transitBoardByLine.displayPage = function(data, callback) {
 	
 	// create/update car2go tables
 	if (transitBoardByLine.car2go > 0) {
+	  
 		var vehicles = transitBoardByLine.cars.get_vehicles();
-		for (i=0; i<transitBoardByLine.car2go; i++) {
+		
+		if (vehicles.length == 0) {
+			// no bikes, kill off the display elements
+			jQuery("table.trip_wrapper.active").each(function(index,element){
+				var id = jQuery(element).attr("data-tripid");
+				if ( trip_objects[id] == null && id.match(/car2go/) ) {
+					jQuery("table."+id).removeClass('active');
+					removal_queue.push(id);
+				}
+			});
+		}		
+		
+		for (i=0; i<vehicles.length; i++) {
 			if ( typeof vehicles[i] !== 'undefined') {
 				var value = vehicles[i];
 				var dist = value[1];
@@ -1174,7 +1188,7 @@ head.ready(function() {
 			var serialized_stack = JSON.stringify(stackInfo);
 			if (serialized_stack.match(/tracekit/)) {
 				// don't track self-referential tracekit errors
-			} else if (stackInfo.message.search(/Timezone/i) > -1) {
+			} else if (stackInfo.message.match(/Timezone/i)) {
 				jQuery.ajax({
 				    url: handler_url,
 				    type: 'POST',
