@@ -76,7 +76,7 @@ h1 {
 	padding-bottom: .1em;
 }
 #tb_ticker { 
-	background-color: #CCCCCC; 
+	background-color: #eeeeee; 
 	width: 100%; 
 	font-weight: 
 	normal; 
@@ -218,6 +218,7 @@ div.trip.service_color_yellow div.route_wrapper,
 div.trip.service_color_yellow div.destination_wrapper {
 	background-color: #FEC325;
 	border-color: #FEC325;
+	color: white;
 }
 
 table.trip_wrapper tbody.service_color_orange td.route,
@@ -227,15 +228,17 @@ div.trip.service_color_orange div.route_wrapper,
 div.trip.service_color_orange div.destination_wrapper {
 	background-color: #D25D13;
 	border-color: #D25D13;
+	color: white;
 }
 
-table.trip_wrapper tbody.service_color_6 td.route,
-table.trip_wrapper tbody.service_color_6 td.destination,
-table.trip_wrapper tbody.service_color_6 td.destination div,
-div.trip.service_color_6 div.route_wrapper, 
-div.trip.service_color_6 div.destination_wrapper {
-	background-color: #dddddd;
-	border-color: #dddddd;
+table.trip_wrapper tbody.service_color_5 td.route,
+table.trip_wrapper tbody.service_color_5 td.destination,
+table.trip_wrapper tbody.service_color_5 td.destination div,
+div.trip.service_color_5 div.route_wrapper, 
+div.trip.service_color_5 div.destination_wrapper {
+	background-color: #666;
+	border-color: #666;
+	color: white;
 }
 
 table.trip_wrapper tbody.service_color_7 td.route,
