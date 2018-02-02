@@ -206,6 +206,7 @@ transitBoardByLine.initializePage = function(data) {
 		if (data.optionsConfig.lng != undefined && data.optionsConfig.lng[0] != undefined) {
 			if (data.optionsConfig.car2go != undefined && data.optionsConfig.car2go[0] != undefined) {
 				transitBoardByLine.car2go = data.optionsConfig.car2go[0];
+				transitBoardByLine.car2go = 0; // disable temporarily
 				if (transitBoardByLine.car2go != 0 ) {
 					transitBoardByLine.cars = new trCar2Go({
 						lat: data.optionsConfig.lat[0],
