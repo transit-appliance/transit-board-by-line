@@ -234,7 +234,7 @@ transitBoardByLine.initializePage = function(data) {
 					transitBoardByLine.bikes = new trGBFS({
 						lat: data.optionsConfig.lat[0],
 						lng: data.optionsConfig.lng[0],
-						loc: 'http://biketownpdx.socialbicycles.com/opendata/gbfs.json',
+						loc: 'http://gbfs.biketownpdx.com/gbfs/gbfs.json',
 						num_locations: transitBoardByLine.gbfs,
 						include_free_bikes: free_bikes
 					});
@@ -945,9 +945,9 @@ transitBoardByLine.displayPage = function(data, callback) {
 			  if (value.num_bikes_available == 1) {
 			    bikes = "bike";
 			  }
-			  var station = "BIKETOWN bike";
+			  var station = "BIKETOWN ebike";
 			  if (value.location_type == "station") {
-			    station = '<span class="terminus">'+value.num_bikes_available+" "+bikes+"</span> at BIKETOWN Station";
+			    station = '<span class="terminus">'+value.num_bikes_available+" ebikes</span> at BIKETOWN Station";
 			  }
 
 				if (jQuery(".gbfs"+i).length == 0) {
